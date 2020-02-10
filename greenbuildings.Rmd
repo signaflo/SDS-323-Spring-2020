@@ -1,0 +1,37 @@
+---
+title: "greenbuildings"
+author: "Crystal Tse"
+date: "2/7/2020"
+output: md_document
+---
+
+```{r}
+library(mosaic)
+library(tidyverse)
+library(knitr)
+library(car)
+grb = read.csv("greenbuildings.csv")
+```
+
+A variable called totalrent was created in order to make the units more indicative of the cost of an entire building that was occupied. Multiplying rent by size by leasing rate yielded the desired variable.
+
+```{r}
+grb$totalrent <- grb$Rent * grb$size * grb$leasing_rate
+lm1 = lm(totalrent ~ stories + age + renovated + class_a + green_rating, data= grb)
+
+summary(lm1)
+```
+The summary statistics reveal that green rating is not a significant determinant of total rent, while stories, renovations, cluster, and being a class A building are highly statistically significant (p-value is almost 0).
+```{r}
+# check the multicollinearity
+vif(lm1)
+```
+Using the rule of thumb for VIF (variance inflation factor) below 5, this model does not exhibit multicollinearity.
+```{r}
+library(ggeffects) ## debug move this to top if needed
+ggPredict(lm1, point = NULL, jitter = NULL, se = FALSE,
+  show.summary = FALSE, colorAsFactor = FALSE, digits = 2,
+  interactive = FALSE)
+
+```
+

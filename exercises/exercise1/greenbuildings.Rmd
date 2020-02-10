@@ -1,0 +1,17 @@
+---
+title: "greenbuildings"
+author: "Crystal Tse"
+date: "2/7/2020"
+output: md_document
+---
+
+```{r}
+library(mosaic)
+library(tidyverse)
+grb = read.csv("greenbuildings.csv")
+
+grb$totalrent <- grb$Rent * grb$size * grb$leasing_rate
+lm1 = lm(totalrent ~ leasing_rate + stories + age + renovated + class_a + cluster + green_rating, data= grb)
+
+summary(lm1)
+```

@@ -1,0 +1,57 @@
+---
+title: "abia"
+author: "Crystal Tse"
+date: "2/8/2020"
+output: html_document
+---
+
+```{r}
+library(mosaic)
+library(tidyverse)
+
+abia = read.csv("abia.csv")
+```
+# Which airline should you take to reduce your risk of having a cancelled flight?
+
+First, filter out flights that were not cancelled, so the focus is on cancelled flights.
+
+```{r}
+# filter out flights that are not cancelled
+cancelled = abia %>%
+  filter(Cancelled == 1)
+```
+
+The graphic below shows how certain carriers have a larger number of cancelled flights, but this could be attributed to being a larger airline overall.
+```{r}
+# cancellation code, carrier, count of cancelled - bar with count
+ggplot(data = cancelled) + 
+  geom_bar(mapping = aes(x = UniqueCarrier, fill = CancellationCode))
+```
+
+## debug Maybe filter out to only the carriers that have the most cancelled flights here!
+
+
+Normalizing the number of flights to showcase the proportions of reasons for cancellation reveals that NAS delays are not a major factor, so times of higher traffic are not as much of a concern as are weather and carrier issues.
+```{r}
+# control for number of flights to get percentage, compare across groups
+ggplot(data = cancelled, aes(x = UniqueCarrier)) + 
+  geom_bar(position = "fill", aes(y = (..count..)/sum(..count..), fill = CancellationCode))
+```
+
+The representation below allows a clearer comparison of individual values, with the data reduced to the airlines with the more than 100 cancelled flights.
+## debug 
+```{r}
+top_cancelled = cancelled %>% filter(sum(abia$Cancelled) > 100)# debug this does not work as intended :(
+ggplot(data = top_cancelled, aes(x = UniqueCarrier)) + 
+  geom_bar(position = "dodge", aes(y = (..count..)/sum(..count..), fill = CancellationCode))
+```
+
+
+# departure time to cancellation rate
+## debug sum of cancelled, count of DepTime
+
+```{r}
+ggplot(abia %>% filter(!is.na(DepTime)), aes(x = DayOfWeek, y = DepTime)) + 
+  geom_bar(stat= "identity")
+```
+
