@@ -8,6 +8,8 @@ output: html_document
 ```{r}
 library(mosaic)
 library(tidyverse)
+library(RColorBrewer)
+library(nycflights13)
 
 abia = read.csv("abia.csv")
 ```
@@ -35,7 +37,8 @@ Normalizing the number of flights to showcase the proportions of reasons for can
 ```{r}
 # control for number of flights to get percentage, compare across groups
 ggplot(data = cancelled, aes(x = UniqueCarrier)) + 
-  geom_bar(position = "fill", aes(y = (..count..)/sum(..count..), fill = CancellationCode))
+  geom_bar(position = "fill", 
+           aes(y = (..count..)/sum(..count..), fill = CancellationCode))
 ```
 
 The representation below allows a clearer comparison of individual values, with the data reduced to the airlines with the more than 100 cancelled flights.
@@ -69,13 +72,37 @@ canprop=cbind(cantotals[1], round(cantotals[-1]/cartotals[-1], 4))
 
 canprop
 
-# try with proportion
-ggplot(abia, aes(x = Month, y = (Cancelled==1)/(sum(Cancelled)), fill = Dest)) + geom_bar(stat = "identity")
+# check with destination as x and y as cancelledprop?
 
-# redo
-ggplot(cancelled, aes(x = Month, y = Cancelled, fill = Dest)) + geom_bar(position = "fill", stat = "identity") +
+
+# redo attempt
+ggplot(cantotals, aes(x = Month, y = Cancelled, fill = Dest)) + geom_bar(position = "fill", stat = "identity") +
 scale_y_continuous(labels=scales::percent)
 
-# check with destination as x and y as cancelledprop?
+```{r}
+# group by destination and then summarize with count
+# top destinations
+ten_most_visited = abia %>% filter(Dest != "AUS") %>% group_by(Dest) %>% summarize(count = n()) %>% arrange(-count)
+
+ten_most_visited = ten_most_visited[1:10,]
+```
+
+```{r}
+most_visited = abia[abia$Dest == ten_most_visited$Dest,]
+ten_most_visited = inner_join(abia, ten_most_visited, by = "Dest")
+```
+
+```{r}
+# droplevels()
+# try with proportion - good
+ggplot(data = most_visited, 
+  aes(x = Month, y = (Cancelled==1)/(sum(Cancelled)), fill = Dest)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Spectral")
+```
+
+
+
+
 
 
