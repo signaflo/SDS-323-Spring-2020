@@ -1,0 +1,26 @@
+---
+title: "Layered Grammar Of Graphics Notes"
+author: "Jacob Rachiele"
+date: "2/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Purpose
+
+A Layered Grammar of Graphics is a paper by ggplot2 creator Hadley Wickham that gives some
+background describing why the package and its functions operate as they do.
+
+## Introduction
+
+"The most important modern work in graphical grammars is “The Grammar of Graphics” by Wilkinson, Anand, and Grossman (2005)."
+
+One key takeaway: Graphs are made up of separate *components* called **layers**.
+
+## How to Build a Plot
+
+Definition of an aesthetics: *A thing that we can perceive on the graph*. Therefore, when you write 'aes = ...', you're specifying something you can to show to the observer of your graphic.
+

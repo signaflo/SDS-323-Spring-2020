@@ -1,15 +1,19 @@
 ---
-title: "creatinine"
+title: "Creatinine "
 author: "Jinfang Yan, Crystal Tse, Kyle Carter, Jacob Rachiele"
 date: "2/6/2020"
-output: md_document
+output: html_document
 ---
 
-```{r}
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE}
 library(mosaic)
 library(tidyverse)
 
-crt = read.csv("creatinine.csv")
+crt = read.csv("data/creatinine.csv")
 ```
 
 # Question 1
@@ -21,7 +25,8 @@ ggplot(data = crt) + geom_point(mapping = aes(x = age, y = creatclear))
 ```
 
 ```{r}
-# fit a linear model for creatclear vs age
+# fit a linear model for creatclear vs age, where creatclear stands for creatinine clearance rate
+
 
 lm1 = lm(creatclear ~ age, data = crt)
 
