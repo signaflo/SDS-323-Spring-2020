@@ -53,7 +53,7 @@ ggplot(filter(greenb, green_rating == "0"), aes(x = leasing_rate, y = Rent)) +
   theme_few()  + 
   geom_smooth()
 
-# I fund that the when the Non green building with lower leasing_rate have bigger morket then green building with lower leasing_rate
+# I fund that the when the Non green building with lower leasing_rate have bigger market then green building with lower leasing_rate
 
 
 # Small multiples
