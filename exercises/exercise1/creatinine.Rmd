@@ -1,0 +1,74 @@
+---
+title: "Creatinine "
+author: "Jinfang Yan, Crystal Tse, Kyle Carter, Jacob Rachiele"
+date: "2/6/2020"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE}
+library(mosaic)
+library(tidyverse)
+
+crt = read.csv("data/creatinine.csv")
+```
+
+# Question 1
+What creatinine clearance rate should we expect, on average, for a 55 year old?
+
+```{r}
+# pretty scatter plot
+ggplot(data = crt) + geom_point(mapping = aes(x = age, y = creatclear))
+```
+
+```{r}
+# fit a linear model for creatclear vs age, where creatclear stands for creatinine clearance rate
+
+
+lm1 = lm(creatclear ~ age, data = crt)
+
+# coefficients
+coef(lm1)
+```
+
+```{r}
+# plug in for age  --> 113.723
+new_data = data.frame(age = c(55))
+predict(lm1, new_data)
+```
+
+# Question 2
+```{r}
+# the slope coefficient for the linear model
+coef(lm1)
+```
+
+# Question 3
+For their age, who has a healthier/higher rate?
+40 year old with rate 135, or 60 year old with rate 112?
+```{r}
+
+pred40 = data.frame(age = 40)
+resid40 = 135 - predict(lm1, pred40)
+resid40
+predict(lm1, pred40)
+
+# actual - residual = predicted
+#135 - 11.97972 = 123.0203
+```
+
+```{r}
+pred60 = data.frame(age = 60)
+resid60 = 112 - predict(lm1, pred60)
+resid60
+predict(lm1, pred60)
+
+# actual - residual = predicted
+# 112 - 1.376035 = 110.624
+```
+The person with the higher age-adjusted creatinine rate
+is 40 years old, since 123.0203 > 110.624.
+
