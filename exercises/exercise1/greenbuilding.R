@@ -78,6 +78,12 @@ ggplot(greenb, aes(x = leasing_rate, y = total_r)) +
   facet_grid(. ~ Build) +
   theme_few()
 
+
+ggplot(greenb, aes(x = age, y = total_r)) + 
+  geom_point() + 
+  facet_grid(. ~ Build) +
+  theme_few()
+
 names(greenb)
 
 # Factor the class_a and class_b
@@ -87,7 +93,44 @@ greenb <- greenb %>%
 
 
 ggplot(data = greenb) +
-  geom_bar(mapping = aes(x = Build, fill = class))
+  geom_bar(mapping = aes(x = Build, fill = class),position = "fill") +
+  scale_fill_brewer( palette = "Blues")
+
+names(greenb)
+# Control many variables to see how the G & NG affect the total_r
+mod3 = lm(Rent ~ cluster + empl_gr + stories + age + class_a + leasing_rate + green_rating, data = greenb)
+summary(mod3)
+
+ggplot(data=greenb) + 
+  geom_histogram(aes(x=age))
+
+
+
+ggplot(greenb, aes(x = leasing_rate, y = total_r)) + 
+  geom_point() + 
+  facet_grid(. ~ Build) +
+  theme_few()
+
+
+
+greenb <- greenb %>% 
+  mutate(leasing_catg = cut(leasing_rate, c(0,20, 40, 60, 80, 100)))
+summary(greenb)
+
+
+ggplot(data = greenb) +
+  geom_bar(mapping = aes(x = leasing_catg, y = total_r, 
+  fill = Build),
+  stat='identity', position ='dodge') +
+  theme_few() +
+  scale_fill_brewer( palette = "Blues")
+  labs(title = "xxxxx",
+       y = "Total Revenue /Square foot",
+       x = "Leasing.rate",
+       fill = "Building")  
+
+ 
+
 
 
 
