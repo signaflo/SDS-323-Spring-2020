@@ -1,8 +1,8 @@
 ---
 title: "Creatinine "
 author: "Jinfang Yan, Crystal Tse, Kyle Carter, Jacob Rachiele"
-date: "2/6/2020"
-output: html_document
+date: "2/14/2020"
+output: md_document
 ---
 
 ```{r setup, include = FALSE}
