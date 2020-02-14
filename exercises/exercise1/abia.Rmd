@@ -5,7 +5,7 @@ date: "2/8/2020"
 output: html_document
 ---
 
-```{r}
+```{r setup, include = FALSE}
 library(mosaic)
 library(tidyverse)
 library(RColorBrewer)
@@ -14,13 +14,13 @@ abia = read.csv("abia.csv")
 ```
 # What time of year and destinations are the worst for cancellation?
 
-```{r}
+```{r echo = FALSE}
 # filter out flights that are not cancelled
 cancelled = abia %>%
   filter(Cancelled == 1)
 ```
 
-```{r}
+```{r echo = FALSE}
 # group by destination and then summarize with count
 # top destinations
 ten_most_visited = abia %>% filter(Dest != "AUS") %>% group_by(Dest) %>% summarize(count = n()) %>% arrange(-count)
@@ -28,31 +28,31 @@ ten_most_visited = abia %>% filter(Dest != "AUS") %>% group_by(Dest) %>% summari
 ten_most_visited = ten_most_visited[1:10,]
 ```
 
-```{r}
+```{r echo = FALSE}
 most_visited = abia[abia$Dest == ten_most_visited$Dest,]
 ten_most_visited = inner_join(abia, ten_most_visited, by = "Dest")
 ```
-The graph below plots month and cancellation rate for each destination (out of all cancelled flights). One particularly surprising finding is that the largest proportion of cancelled flights occur in March and April, whereas October has virtually none. 
-```{r}
+The graph below plots month and cancellation rate (out of all flights) for the top ten most frequented destinations out of the Austin-Bergstrom International Airport. 
+
+```{r echo = FALSE}
 ggplot(data = ten_most_visited, 
-  aes(x = Month, y = (Cancelled /(sum(Cancelled == 1))), fill = Dest)) +
+  aes(x = Month, y = (Cancelled /(sum(Cancelled == 1))), fill = Dest))+
   geom_bar(stat = "identity") + 
   scale_fill_brewer(palette = "Spectral") + 
   scale_x_discrete(limits = month.abb) +
   ggtitle("Cancellation Rates for Top 10 Destinations") +
-  labs(y = "Sum of Cancellations", x = "Month") +
+  labs(y = "Cancellation Rate", x = "Month") +
   labs(fill = "Destination")
 
 ```
 
-```{r}
-# try to reorder by cancellation rate, instead of alphabetically ## debug
-abia$Dest = factor(abia$Dest, levels=
-  abia$Dest[order(abia$sum(Cancelled))])
+One particularly surprising finding is that the largest proportion of cancelled flights occur in March and April, whereas October and November have very low cancellation rates. 
 
-```
-Delays are also very low in October, but in contrast to the high number of cancellations in September, there are relatively few delays. December is worst for delays, alongside February and March. March is consistently the worst month for both cancellations and departure delays.
-```{r}
+Additionally, in most months, Dallas's major airports (DFW and DAL) experience a large fraction of cancellations, but in September, Houston's two major airports (HOU and IAH) do.
+
+To investigate this surprising pattern of cancellations, it is worth looking into delays for each month.
+
+```{r echo = FALSE}
 # Investigate median departure delays by month.
 
 departure_delays_by_month <- abia %>% 
@@ -75,7 +75,13 @@ ggplot(data = departure_delays_by_month) +
   labs(title = "Median Departure Delay by Month", y = "", x = "Delay in Minutes")
 ```
 
-```{r}
+Departure delays are also very low in October, but in contrast to the high number of cancellations in September, there are relatively few delays. December is worst for departure delays, alongside February and March.
+
+So, February and March are consistently bad for both cancellations and departure delays. December exhibits low cancellation rates but the highest departure delay times.
+
+That begs the question of whether arrival delays exhibit similar patterns.
+
+```{r echo = FALSE}
 arrival_delays_by_month <- abia %>% 
   group_by(Month) %>% 
   filter(ArrDelay > 0) %>% 
@@ -97,9 +103,8 @@ ggplot(data = arrival_delays_by_month) +
 
 ```
 
+September through November experience relatively few arrival delays, and February and March still experience the greatest arrival delay time; however, the summer months experience more arrival delays than departure delays.
 
+December consistently has the greatest delay time, for both arrivals and departures.
 
-
-
-
-
+In sum, anticipate a greater chance of cancellations and delays in February and March, and delays in December. Since the highest cancellation rates for top destinations from the Austin-Bergstrom International Airport are within the state, it is worth considering  more reliable transportation options to guarantee reaching your destination.
