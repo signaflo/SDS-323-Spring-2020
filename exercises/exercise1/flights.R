@@ -47,10 +47,5 @@ ggplot(data = arrival_delays_by_month) +
   scale_y_discrete(limits = rev(month.name)) +
   labs(title = "Median Arrival Delay by Month", y = "", x = "Delay in Minutes")
 
-## Which carriers were the most and least reliable in 2008?
-
-abia_carrier <- abia %>% group_by(UniqueCarrier) %>% 
-  summarize(cancellation_pct = sum(Cancelled)/n(), n = n())
-
 
 

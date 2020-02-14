@@ -2,7 +2,7 @@
 title: SDS 323 Exercises 1
 author: Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
 date: 2/14/2020
-output: md_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -16,6 +16,74 @@ library(tidyverse)
 ```
 ## Problem 1: Flights at ABIA
 
+Let's investigate the median departure delays by month. We look at the
+_median_ since the data is highly skewed, as you see here.
+
+```{r}
+# Read in the Austin 2008 flights data
+
+abia <- read.csv("./data/ABIA.csv", header = TRUE)
+
+ggplot(data = abia) +
+  geom_histogram(mapping = aes(x = DepDelay),
+                 na.rm = TRUE, binwidth = 20) +
+  xlim(0, 500) + ylim(0, 12500)
+```
+
+The following figure shows the median departure delay by month.
+
+```{r}
+departure_delays_by_month <- abia %>% 
+  group_by(Month) %>% 
+  filter(DepDelay > 0) %>% 
+  # Take the median since the distribution is highly skewed.
+  summarize(delay = median(DepDelay, na.rm = TRUE)) %>%
+  select(delay) %>% 
+  mutate(month = month.name)
+
+
+ggplot(data = departure_delays_by_month) +
+  geom_point(
+    mapping = aes(x = delay, y = month),
+    color = "red",
+    size = 3,
+    alpha = 0.6
+  ) +
+  geom_vline(xintercept = 0, size = .25) +
+  xlim(c(0, 20)) +
+  scale_y_discrete(limits = rev(month.name)) +
+  labs(title = "Median Departure Delay by Month", y = "", x = "Delay in Minutes")
+```
+
+Here we note some suprising data. December has a high median departure delay as expected, but March has a higher median delay than some the winter months of November,
+January, and February. Maybe looking at arrival delays could shed some light on whether
+the delay pattern by month is because of seasonality surrounding Austin.
+
+```{r}
+arrival_delays_by_month <- abia %>% 
+  group_by(Month) %>% 
+  filter(ArrDelay > 0) %>% 
+  # Take the median since the distribution is highly skewed.
+  summarize(delay = median(ArrDelay, na.rm = TRUE)) %>%
+  select(delay) %>% 
+  mutate(month = month.name)
+
+ggplot(data = arrival_delays_by_month) +
+  geom_point(
+    mapping = aes(x = delay, y = month),
+    color = "red",
+    size = 3,
+    alpha = 0.6
+  ) +
+  geom_vline(xintercept = 0, size = .25) +
+  xlim(c(0, 20)) +
+  scale_y_discrete(limits = rev(month.name)) +
+  labs(title = "Median Arrival Delay by Month", y = "", x = "Delay in Minutes")
+```
+
+Once again, we note a similar pattern -- arrival delays in March (as well as June)
+are suprisingly high relative to the median delays in some of the winter months.
+
 ## Problem 2: Regression Practice (Creatinine)
 
 ## Problem 3: Green Buildings
@@ -24,7 +92,7 @@ library(tidyverse)
 
 ```{r}
 # Read the data file
-milk <- read.csv("data/milk.csv")
+milk <- read.csv("./data/milk.csv")
 ```
 
 First, graph the data.
