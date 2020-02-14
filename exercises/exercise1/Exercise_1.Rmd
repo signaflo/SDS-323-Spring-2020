@@ -339,23 +339,23 @@ ggplot(data = milk) +
 
 Notice that this is not a linear relationship, which makes sense since
 quantity demanded is modeled in microeconomics using a Power Law:
-$Q = KP^E$,
+Q = KP^E,
 where Q is the quantity demanded, P is the price, E is the price elasticisty of demand and K is a constant.
 
 Step 1: Write an equation that expresses net profit N in terms of both Q and P (and cost c)
 
-$$N = (P - c)Q$$
+N = (P - c)Q
 
 Step 2: Use the microeconomic model of quanity demanded, which is a function of the price.
 
-$Q = f(P) = KP^E$, so that $N = (P - c)f(P) = (P-c)(KP^E)$
+Q = f(P) = KP^E, so that N = (P - c)f(P) = (P-c)(KP^E).
 
 The values of K and E are uknown, so we must estimate them from the data.
 
-We can do this using linear regression using the product and power rules of logarithms, which tell us that $ln(Q) = ln(KP^E) = ln(K) + E(ln(P))$.
+We can do this using linear regression using the product and power rules of logarithms, which tell us that ln(Q) = ln(KP^E) = ln(K) + E(ln(P)).
 
-This has the form of a simple linear regression, where $\beta_0 = ln(K)$ and 
-$\beta_1 = E$.
+This has the form of a simple linear regression, where B0 = ln(K) and 
+B1 = E.
 
 Step 3: Use simple linear regression to estimate the unknown coefficients.
 
