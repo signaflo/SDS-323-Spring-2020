@@ -48,7 +48,7 @@ The median rent for non-green buildings is actually much higher than that for gr
 The previous report's findings correctly filtered out outliers in terms of low occupancy but did not consider the relevant range for the desired building. The focus on newer buildings around 250,000 square feet allows for a more targeted comparison and reveals that simply comparing green and non-green buildings as a whole introduces a host of problems due to the vast range of possible building types.
 
 ## Age Distribution for Non-Green and Green Buildings
-Green Buildings are newer on average than non-green buildings. They are both positively skewed; however, the non-green distribution looks almost bimodal. The median is not necessarily be the best indicator, since the age is concentrated in two separate areas.
+Green buildings are newer on average than non-green buildings. They are both positively skewed; however, the non-green distribution looks almost bimodal. The median is not necessarily be the best indicator, since the age is concentrated in two separate areas.
 
 ```{r echo= FALSE}
 ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating))) +
@@ -85,7 +85,7 @@ We explored the relationship between leasing rate and total revenues.
 From a revenue perspective, the green building does not have a distinct advantage over non-green buildings. In addition, the non-green buildings have a larger market than green buildings when the leasing rate is less than 50%. Furthermore, we know the cost of constructing a green building is higher than that of non-green buildings.
 
 ```{r echo=FALSE}
-grb$total_r <- (grb$leasing_rate * grb$Rent)/100
+grb$total_r <- (grb$leasing_rate/100 * grb$Rent)
 ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
   geom_point(size = 1.5, alpha = 0.25) + 
   facet_grid(. ~ Build) +
@@ -117,7 +117,8 @@ The rent for each cluster has a wide range, and may possibly represent regional 
 crent <- grb %>% 
   group_by(cluster) %>% 
   summarize(cr=mean(cluster_rent))
-favstats(~cr, data=crent) %>% kable()
+favstats(~cr, data=crent) %>% kable()  %>% kable_styling()
+
 ggplot(data=crent, aes(x=cr))+
   geom_density(fill="lightblue")+
   labs(x="Cluster Rent", y="Density", title="Cluster Rent Disribution")
