@@ -55,6 +55,27 @@ ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating)))
 
 ```
 
+## Class A and Green Rating
+Green buildings are more likely to be class_a, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
+```{r echo=FALSE}
+
+grb <- grb %>% 
+  mutate(Build = factor(green_rating, levels = c(1,0),
+                        labels = c("Green Building", "Nongreen Building"))) %>% 
+  mutate(class=factor(class_a, levels=c(0,1), labels=c("Class B", "Class A")))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = Build, fill = factor(class)), position = "fill") +
+  scale_fill_brewer( palette = "Blues") +
+  labs(x="Green Rating", y="Proportion of Buildings", title="Most Green Buildings are Class A", fill="Class Rating")+
+  theme_few()
+
+grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>% 
+  group_by(class_a) %>% 
+  summarize(median_rent = median(Rent, na.rm = TRUE))%>% 
+  kable(col.names = c("Class A Rating", "Median Rent"), caption = "Median Rent by Relevant Area and Age for Class A") %>% 
+  kable_styling(full_width = F ,position = "left")
+```
+
 ## The total revenue of Green building VS Nongreen building by leasing rate
 We use (leasing rate / 100 * Rent) to get total revenus per square foot the company can gain.
 We explored the relationship between leasing rate and total revenus. 
@@ -83,27 +104,6 @@ ggplot(data = grb) +
        x = "Leasing Rate",
        fill = "Building")  
 ```
-## Class A and Green Rating
-Green buildings are more likely to be class_a, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
-```{r echo=FALSE}
-
-grb <- grb %>% 
-  mutate(Build = factor(green_rating, levels = c(1,0),
-                        labels = c("Green Building", "Nongreen Building"))) %>% 
-  mutate(class=factor(class_a, levels=c(0,1), labels=c("Class B", "Class A")))
-ggplot(data = grb) +
-  geom_bar(mapping = aes(x = Build, fill = factor(class)), position = "fill") +
-  scale_fill_brewer( palette = "Blues") +
-  labs(x="Green Rating", y="Proportion of Buildings", title="Most Green Buildings are Class A", fill="Class Rating")+
-  theme_few()
-
-grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>% 
-  group_by(class_a) %>% 
-  summarize(median_rent = median(Rent, na.rm = TRUE))%>% 
-  kable(col.names = c("Class A Rating", "Median Rent"), caption = "Median Rent by Relevant Area and Age for Class A") %>% 
-  kable_styling(full_width = F ,position = "left")
-```
-
 
 
 ## Issues with Clusters
