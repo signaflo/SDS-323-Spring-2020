@@ -2,7 +2,7 @@
 title: "Green Buildings"
 author: "Jinfang Yan, Crystal Tse, Kyle Carter, Jacob Rachiele"
 date: "2/14/2020"
-output: html_document
+output: md_document
 ---
 Load in the data, and filter out the buildings with less than 10% occupancy.
 ```{r setup, include = FALSE}
