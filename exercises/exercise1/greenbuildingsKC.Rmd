@@ -55,6 +55,34 @@ ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating)))
 
 ```
 
+## The total revenue of Green building VS Nongreen building by leasing rate
+We use (leasing rate * Rent) / 100 to get total revenus per square foot the company can gain.
+We explored the relationship between leasing rate and total revenus. 
+From the revenue prospective, the green building don't have advangates than nongreenbuild. In addition, the nongreen building have larger market than green building when the leasing rate is less than 50%. And we know cost of built a green building is higher than nongreen building.
+
+```{r echo=FALSE}
+grb$total_r <- (grb$leasing_rate * grb$Rent)/100
+ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
+  geom_point(size = 1.5, alpha = 0.25) + 
+  facet_grid(. ~ Build) +
+  labs(x = "Leasing Rate", y = "Total Revenue (per square foot)")
+  
+```
+
+```{r echo=FALSE}
+grb <- grb %>% 
+  mutate(leasing_catg = cut(leasing_rate, c(0,20, 40, 60, 80, 100)))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = leasing_catg, y = total_r, 
+  fill = Build),
+  stat='identity', position ='dodge') +
+  theme_few() +
+  scale_fill_brewer( palette = "Blues") +
+  labs(title = "Quantitative Comparison of Per-Unit Revenue",
+       y = "Total Revenue (per square foot)",
+       x = "Leasing Rate",
+       fill = "Building")  
+```
 ## Class A and Green Rating
 Green buildings are more likely to be class_a, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
 ```{r echo=FALSE}
