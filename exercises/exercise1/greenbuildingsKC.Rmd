@@ -4,7 +4,9 @@ author: "Jinfang Yan, Crystal Tse, Kyle Carter, Jacob Rachiele"
 date: "2/14/2020"
 output: md_document
 ---
-Load in the data, and filter out the buildings with less than 10% occupancy.
+Our investigation into the decision of whether or not to obtain a green certification contradicts the original report's findings. In particular, focusing more on the desired specifications of area, age, and class A distinction points to the fact that "green" buildings are not, in itself, a factor that results in higher rent. Further research needs to be done on building clusters to extract more precise estimates of other construction considerations. 
+
+To start, we filtered out the buildings with less than 10% occupancy.
 ```{r setup, include = FALSE}
 library(mosaic)
 library(tidyverse)
@@ -18,7 +20,7 @@ grb = grb %>%
 
 ```
 
-Below is the table without any filter for size (the same as the guru's analysis)
+Below is the table without any filter for size, resulting in the same figures as the previous report.
 ```{r echo = FALSE}
 grb %>% 
   group_by(green_rating) %>% 
@@ -45,8 +47,8 @@ The median rent for non-green buildings is actually much higher than that for gr
 
 The previous report's findings correctly filtered out outliers in terms of low occupancy but did not consider the relevant range for the desired building. The focus on newer buildings around 250,000 square feet allows for a more targeted comparison and reveals that simply comparing green and non-green buildings as a whole introduces a host of problems due to the vast range of possible building types.
 
-## Age distribution for Non-Green and Green Buildings
-Green Buildings are newer on average than non-green buildings. They are both positively skewed, however the non-green distribution looks almost bimodal. The median will not necessarily be the best indicator since the age is concentrated in two separate areas.
+## Age Distribution for Non-Green and Green Buildings
+Green Buildings are newer on average than non-green buildings. They are both positively skewed; however, the non-green distribution looks almost bimodal. The median is not necessarily be the best indicator, since the age is concentrated in two separate areas.
 
 ```{r echo= FALSE}
 ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating))) +
@@ -55,8 +57,36 @@ ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating)))
 
 ```
 
+## Total Revenue of Non-Green and Green Buildings by Leasing Rate
+We use (Leasing Rate * Rent) / 100 to get total revenues per square foot the company can gain.
+We explored the relationship between leasing rate and total revenues. 
+From a revenue perspective, the green building does not have a distinct advantage over non-green buildings. In addition, the non-green buildings have a larger market than green buildings when the leasing rate is less than 50%. Furthermore, we know the cost of constructing a green building is higher than that of non-green buildings.
+
+```{r echo=FALSE}
+grb$total_r <- (grb$leasing_rate * grb$Rent)/100
+ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
+  geom_point(size = 1.5, alpha = 0.25) + 
+  facet_grid(. ~ Build) +
+  labs(x = "Leasing Rate", y = "Total Revenue (per square foot)")
+  
+```
+
+```{r echo=FALSE}
+grb <- grb %>% 
+  mutate(leasing_catg = cut(leasing_rate, c(0,20, 40, 60, 80, 100)))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = leasing_catg, y = total_r, 
+  fill = Build),
+  stat='identity', position ='dodge') +
+  theme_few() +
+  scale_fill_brewer( palette = "Blues") +
+  labs(title = "Quantitative Comparison of Per-Unit Revenue",
+       y = "Total Revenue (per square foot)",
+       x = "Leasing Rate",
+       fill = "Building")  
+```
 ## Class A and Green Rating
-Green buildings are more likely to be class_a, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
+Green buildings are more likely to be of Class A rating, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
 ```{r echo=FALSE}
 
 grb <- grb %>% 
@@ -76,39 +106,11 @@ grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>%
   kable_styling(full_width = F ,position = "left")
 ```
 
-## The total revenue of Green building VS Nongreen building by leasing rate
-We use (leasing rate / 100 * Rent) to get total revenus per square foot the company can gain.
-We explored the relationship between leasing rate and total revenus. 
-From the revenue prospective, the green building don't have advangates than nongreenbuild. In addition, the nongreen building have larger market than green building when the leasing rate is less than 50%. And we know cost of built a green building is higher than nongreen building.
-
-```{r echo=FALSE}
-grb$total_r <- (grb$leasing_rate / 100 * grb$Rent)
-
-ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
-  geom_point() + 
-  facet_grid(. ~ Build) +
-  labs(x = "Leasing Rate", y = "Total Revenue (per square foot)")
-  
-```
-```{r echo=FALSE}
-grb <- grb %>% 
-  mutate(leasing_catg = cut(leasing_rate, c(0,20, 40, 60, 80, 100)))
-ggplot(data = grb) +
-  geom_bar(mapping = aes(x = leasing_catg, y = total_r, 
-  fill = Build),
-  stat='identity', position ='dodge') +
-  theme_few() +
-  scale_fill_brewer( palette = "Blues") +
-  labs(title = "Quantitative Comparison of Per-Unit Revenue",
-       y = "Total Revenue (per square foot)",
-       x = "Leasing Rate",
-       fill = "Building")  
-```
 
 
 ## Issues with Clusters
 
-The rent for each cluster has a wide range, and may possibly represent regional differences in rent. In addition, there is no information in the data set for the location of the clusters. As such, we are not able to pinpoint exeactly what rent we could expect to charge since it varies so much across clusters. Further, the distribution is positively skewed; we don't know which side of the distribution the rent we charge would be on. It would be useful to gather location information on the clusters so that the analysis could compare local buildings.
+The rent for each cluster has a wide range, and may possibly represent regional differences in rent. In addition, there is no information in the data set for the location of the clusters. As such, we are not able to pinpoint exactly what rent we could expect to charge since it varies so much across clusters. Further, the distribution is positively skewed; we don't know which side of the distribution the rent we charge would be on. It would be useful to gather location information on the clusters so that the analysis could compare buildings local to our planned construction site.
 
 ```{r echo=FALSE}
 #data frame with clusters and cluster rents
@@ -124,7 +126,7 @@ ggplot(data=crent, aes(x=cr))+
 
 
 ## Issues with Utility Costs
-Although gas costs are mostly concentrated around the same level, but electricity costs have wild variation. Again, without knowing the specific location, we cannot know how the electricity and gas costs will factor into the rent.
+Although gas costs are mostly concentrated around the same level, electricity costs have wild variation. Again, without knowing the specific location, we cannot know how the electricity and gas costs will factor into the rent.
 
 ```{r echo=FALSE}
 #filter out the observations that are on a net contract basis
@@ -142,5 +144,5 @@ ggplot(data=grb_nonet, aes(x=Electricity_Costs))+
 ```
 
 
-The initial estimate given did not account for many of the variables that could account for rent for green buildings. In order to make a more fair comparison and a thorough analysis, more information is needed. But for starters, the comparison should be made for buildings of the similar size and age. The age distribution is skewed for both green and non-green buildings, so a simple average will not suffice. We showed that the Class A rating may be a confounding variable since most green buildings are Class A. Thus, it may be more worthwhile to pursue a Class A rating instead since buildings with this rating have a higher median rent than Class B buildings. Because rents are highly varied across clusters, and no information is given about the location of these cluster, we do not know how competitive the rent we charge would be, or if it is reasonable for our region. Electricity costs also have a wide range, and it would factor into the rent.
+The initial estimate given did not account for many of the variables that could account for rent for green buildings. In order to make a more fair comparison and a thorough analysis, more information, especially about clusters, is needed. But for starters, the comparison should be made for buildings of the similar size and age. The age distribution is skewed for both green and non-green buildings, so a simple average will not suffice. We showed that the Class A rating may be a confounding variable since most green buildings are Class A. Thus, it may be more worthwhile to pursue a Class A rating instead since buildings with this rating have a higher median rent than Class B buildings. Because rents are highly varied across clusters, and no information is given about the location of these cluster, we do not know how competitive the rent we charge would be, or if it is reasonable for our region. Electricity costs also have a wide range, and it would factor into the rent.
 
