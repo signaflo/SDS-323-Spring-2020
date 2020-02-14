@@ -1,12 +1,10 @@
 ---
-title: "SDS 323 Exercises 1"
-author: "Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan"
-date: "2/14/2020"
-output:
-  md_document:
-    variant: markdown_github
-    preserve_yaml: TRUE
+output: md_document
 ---
+
+## SDS 323 Exercises 1
+## Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
+## 2/14/2020
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

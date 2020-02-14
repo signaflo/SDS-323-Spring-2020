@@ -1,12 +1,11 @@
----
-title: "SDS 323 Exercises 1"
-author: "Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan"
-date: "2/14/2020"
-output:
-  md_document:
-    variant: markdown_github
-    preserve_yaml: TRUE
----
+SDS 323 Exercises 1
+-------------------
+
+Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
+-----------------------------------------------------
+
+2/14/2020
+---------
 
 Problem 1: Flights at ABIA
 ==========================
