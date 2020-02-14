@@ -2,7 +2,7 @@
 title: "greenbuildings"
 author: "Crystal Tse"
 date: "2/14/2020"
-output: md_document
+output: html_document
 ---
 Load in the data, and filter out the buildings with less than 10% occupancy, similar to the Excel guy
 ```{r setup, include = FALSE}
@@ -10,20 +10,16 @@ library(mosaic)
 library(tidyverse)
 library(kableExtra)
 library(knitr)
-grb = read.csv("greenbuildings.csv")
-grb = grb 
+library(RColorBrewer)
+library(ggthemes)
+grb = read.csv("data/greenbuildings.csv")
+grb = grb %>% 
+  filter(leasing_rate>=10)
+
 ```
 
-
+Below is the table without any filter for size (the same as the guru's analysis)
 ```{r echo = FALSE}
-#ggplot(data = grb, mapping = aes(group = green_rating, y = median(Rent))+ geom_bar(stat = "identity"))
-
-#ggplot(data = grb)+ geom_bar(green_rating, Rent, fill = as.factor(green_rating), stat= "summary", fun.y = "median")
-
-# try to make a table comparing no filter and size between 200k and 300k square feet median rent, green vs nongreen
-# mean age by class
-
-# Below is the table without any filter for size (the same as the guru's analysis)
 grb %>% 
   group_by(green_rating) %>% 
   summarize(median_rent = median(Rent, na.rm = TRUE)) %>% kable(col.names = c("Green Rating", "Median Rent"), caption = "Median Rent Overall") %>% kable_styling(full_width = F ,position = "left")
@@ -47,6 +43,37 @@ grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>%
 ```
 The median rent for non-green buildings is actually much higher than that for green buildings if filtering for both square footage and age. Non-green buildings are shown to have a \$7.26 advantage over green buildings, not accounting for other confounding factors.
 
-The previous report's findings threw out outliers in terms of low occupancy but did not consider the relevant range for the desired building. The focus on newer buildings around 250,000 square feet allows for a more targeted comparison and reveals that simply comparing green and non-green buildings as a whole introduces a host of problems due to the vast range of possible building types.
+The previous report's findings correctly filtered out outliers in terms of low occupancy but did not consider the relevant range for the desired building. The focus on newer buildings around 250,000 square feet allows for a more targeted comparison and reveals that simply comparing green and non-green buildings as a whole introduces a host of problems due to the vast range of possible building types.
+
+## Age distribution for Non-Green and Green Buildings
+Green Buildings are newer on average than non-green buildings. They are both positively skewed, however the non-green distribution looks almost bimodal. The median will not necessarily be the best indicator since the age is concentrated in two separate areas.
+
+```{r echo= FALSE}
+ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating))) +
+  geom_density(position = "identity", alpha=0.5) +
+  labs(x="Age", y="Proportion of Buildings", title="Green Buildings Tend to be Newer", fill="Green Rating")
+
+```
+
+## Class A and Green Rating
+Green buildings are more likely to be class_a, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
+```{r echo=FALSE}
+
+grb <- grb %>% 
+  mutate(Build = factor(green_rating, levels = c(1,0),
+                        labels = c("Green Building", "Nongreen Building")))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = Build, fill = factor(class_a)), position = "fill") +
+  scale_fill_brewer( palette = "Reds") +
+  labs(x="Green Rating", y="Proportion of Buildings", title="Most Green Buildings are Class A")
+
+grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>% 
+  group_by(class_a) %>% 
+  summarize(median_rent = median(Rent, na.rm = TRUE))%>% 
+  kable(col.names = c("Class A Rating", "Median Rent"), caption = "Median Rent by Relevant Area and Age for Class A") %>% 
+  kable_styling(full_width = F ,position = "left")
+
+```
+
 
 
