@@ -1,20 +1,18 @@
 SDS 323 Exercises 1
 -------------------
 
-Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
------------------------------------------------------
+### Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
 
-2/14/2020
----------
+### 2/14/2020
 
 Problem 1: Flights at ABIA
-==========================
+--------------------------
 
 Problem 2: Regression Practice (Creatinine)
-===========================================
+-------------------------------------------
 
 Problem 3: Green Buildings
-==========================
+--------------------------
 
 Problem 4: Milk Prices
-======================
+----------------------
