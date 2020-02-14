@@ -1,5 +1,5 @@
 ---
-title: "abia"
+title: "What time of year and destinations are the worst for cancellation?"
 author: "Crystal Tse"
 date: "2/8/2020"
 output: html_document
@@ -12,7 +12,7 @@ library(RColorBrewer)
 
 abia = read.csv("abia.csv")
 ```
-# What time of year and destinations are the worst for cancellation?
+When planning travel from Austin, especially with connecting flights, consider cancellations and delays. This analysis shows the months and destinations which are the worst.
 
 ```{r echo = FALSE}
 # filter out flights that are not cancelled
