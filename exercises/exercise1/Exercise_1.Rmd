@@ -13,10 +13,10 @@ library(RColorBrewer)
 library(kableExtra)
 library(knitr)
 library(ggthemes)
-abia = read.csv("abia.csv")
-crt = read.csv("creatinine.csv")
-grb = read.csv("greenbuildings.csv")
-milk <- read.csv("milk.csv")
+abia = read.csv("./data/abia.csv")
+crt = read.csv("./data/creatinine.csv")
+grb = read.csv("./data/greenbuildings.csv")
+milk <- read.csv("./data/milk.csv")
 
 ```
 ## Problem 1: Flights at ABIA
@@ -378,7 +378,7 @@ E <- coef(model)[2]
 ```
 
 Taking the exponential of both sides gives us net profit in terms of P and c alone,
-$N \approx  (P - c)(112P^{-1.62})$
+N =  (P - c)(112P^(-1.62))
 
 Let's assume c = 1.
 ```{r}
