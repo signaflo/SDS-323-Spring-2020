@@ -83,8 +83,6 @@ From the revenue prospective, the green building don't have advangates than nong
 ```{r echo=FALSE}
 grb$total_r <- (grb$leasing_rate * grb$Rent)/100
 
-
- 
 ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
   geom_point(size = 1.5, alpha = 0.25) + 
   facet_grid(. ~ Build) +
