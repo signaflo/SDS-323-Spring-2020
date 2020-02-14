@@ -20,7 +20,7 @@ crt = read.csv("data/creatinine.csv")
 What creatinine clearance rate should we expect, on average, for a 55 year old?
 
 ```{r}
-# pretty scatter plot
+# scatter plot comparing age and clearance rate
 ggplot(data = crt) + geom_point(mapping = aes(x = age, y = creatclear))
 ```
 
@@ -72,3 +72,10 @@ predict(lm1, pred60)
 The person with the higher age-adjusted creatinine rate
 is 40 years old, since 123.0203 > 110.624.
 
+```{r}
+gf_point(creatclear~age, data=crt, size=3, alpha=0.8) %>% 
+  gf_labs(x="Age", y="Creatine Clearance Rate (ml/min)", 
+          title="Creatine Clearance Rate Decreases with Age") %>% 
+  gf_theme(theme_bw()) %>% 
+  gf_lm()
+```
