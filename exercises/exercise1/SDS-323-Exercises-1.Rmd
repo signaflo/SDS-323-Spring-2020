@@ -1,17 +1,15 @@
 ---
 title: SDS 323 Exercises 1
-output: md_document
+author: Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
+date: 2/14/2020
+output: pdf_document
 ---
-
-## SDS 323 Exercises 1
-### Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
-### 2/14/2020
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r message = FALSE}
+```{r message = FALSE, echo = FALSE}
 # load required packages
 library(mosaic)
 library(tidyverse)
@@ -19,8 +17,6 @@ library(tidyverse)
 ## Problem 1: Flights at ABIA
 
 ## Problem 2: Regression Practice (Creatinine)
-
-
 
 ## Problem 3: Green Buildings
 
@@ -46,7 +42,7 @@ where Q is the quantity demanded, P is the price, E is the price elasticisty of 
 
 Step 1: Write an equation that expresses net profit N in terms of both Q and P (and cost c)
 
-$N = (P - c)Q$
+$$N = (P - c)Q$$
 
 Step 2: Use the microeconomic model of quanity demanded, which is a function of the price.
 
@@ -65,7 +61,7 @@ Step 3: Use simple linear regression to estimate the unknown coefficients.
 model <- lm(log(sales) ~ log(price), data = milk)
 ```
 
-Confirm the linearity of the logarithm the data by plotting.
+Confirm the linearity of the logarithm of the data by plotting.
 
 ```{r}
 plot(log(sales) ~ log(price), data = milk)
