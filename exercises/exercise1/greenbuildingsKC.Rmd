@@ -115,7 +115,7 @@ The rent for each cluster has a wide range, and may possibly represent regional 
 crent <- grb %>% 
   group_by(cluster) %>% 
   summarize(cr=mean(cluster_rent))
-favstats(~cr, data=crent)
+favstats(~cr, data=crent) %>% kable()
 ggplot(data=crent, aes(x=cr))+
   geom_density(fill="lightblue")+
   labs(x="Cluster Rent", y="Density", title="Cluster Rent Disribution")
