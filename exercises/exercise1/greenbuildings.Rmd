@@ -39,7 +39,7 @@ Filtering further for age, since our building will be newly constructed, it is m
 ```{r echo = FALSE}
 grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>% 
   group_by(green_rating) %>% 
-  summarize(median_rent = median(Rent, na.rm = TRUE))%>% kable(col.names = c("Green Rating", "Median Rent"), caption = "Median Rent by Relevant Area and Age") %>% kable_styling(full_width = F ,position = "left")
+  summarize(median_rent = median(Rent, na.rm = TRUE))%>% kable(col.names = c("Green Rating", "Median Rent"), caption = "Median Rent by Area and Age") %>% kable_styling(full_width = F ,position = "left")
 ```
 The median rent for non-green buildings is actually much higher than that for green buildings if filtering for both square footage and age. Non-green buildings are shown to have a \$7.26 advantage over green buildings, not accounting for other confounding factors.
 
@@ -90,4 +90,18 @@ ggplot(grb, aes(x = leasing_rate, y = total_r)) +
   
 ```
 
+```{r echo=FALSE}
 
+grb <- grb %>% 
+  mutate(leasing_catg = cut(leasing_rate, c(0,20, 40, 60, 80, 100)))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = leasing_catg, y = total_r, 
+  fill = Build),
+  stat='identity', position ='dodge') +
+  theme_few() +
+  scale_fill_brewer( palette = "Blues") +
+  labs(title = "Quantitative Comparison of Per-Unit Revenue",
+       y = "Total Revenue (per square foot)",
+       x = "Leasing Rate",
+       fill = "Building")  
+```
