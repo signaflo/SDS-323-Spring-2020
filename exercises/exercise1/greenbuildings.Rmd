@@ -75,5 +75,21 @@ grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>%
 
 ```
 
+## The total revenue of Green building VS Nongreen building by leasing rate
+We use (leasing rate * Rent) / 100 to get total revenus per square foot the company can gain.
+We explored the relationship between leasing rate and total revenus. 
+From the revenue prospective, the green building don't have advangates than nongreenbuild. In addition, the nongreen building have larger market than green building when the leasing rate is less than 50%. And we know cost of built a green building is higher than nongreen building.
+
+```{r echo=FALSE}
+grb$total_r <- (grb$leasing_rate * grb$Rent)/100
+
+
+ 
+ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
+  geom_point(size = 1.5, alpha = 0.25) + 
+  facet_grid(. ~ Build) +
+  labs(x = "Leasing Rate", y = "Total Revenue (per square foot)")
+  
+```
 
 
