@@ -1,16 +1,17 @@
 ---
 title: "greenbuildings"
 author: "Crystal Tse"
-date: "2/7/2020"
-output: html_document
+date: "2/14/2020"
+output: md_document
 ---
-
-```{r echo = FALSE}
+Load in the data, and filter out the buildings with less than 10% occupancy, similar to the Excel guy
+```{r setup, include = FALSE}
 library(mosaic)
 library(tidyverse)
 library(kableExtra)
 library(knitr)
 grb = read.csv("greenbuildings.csv")
+grb = grb 
 ```
 
 
