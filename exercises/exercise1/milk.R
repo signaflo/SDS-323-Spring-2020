@@ -29,26 +29,5 @@ curve((x-1)*110*x^(-1.62), from = 1, to = 9)
 curve((x-1)*110*x^(-1.62), from = 2.5, to = 2.7)
 
 
-# Another method:
-# f(x) maximum at x, the log(f(x)) maximum at x
-mod2 = lm(log(N) ~ 2
 
 
-
-
-
-
-milk <- milk %>% 
-  mutate(C = 1) %>% 
-  mutate(N = (price - C) * sales)
-
-
-ggplot(data = milk) +
-  geom_point(aes(x = sales, y = N)) +
-  geom_smooth(mapping = aes(x = sales, y = N) )
-
-
-mod1 = lm(log(N) ~ log(price), data = milk)
-
-ggplot(data = milk) + 
-  geom_point(aes(x = price, y = N)) 
