@@ -1,7 +1,8 @@
 library(mosaic)
 library(tidyverse)
+library(FNN)
 
-sclass = read.csv('sclass.csv')
+sclass = read.csv('./data/sclass.csv')
 
 # The variables involved
 summary(sclass)
@@ -26,8 +27,8 @@ N_350test = N_350 - N_350train
 train_350ind = sample.int(N_350, N_350train, replace=FALSE)
 
 # Define the training and testing set
-D_350train = sclass350[train_ind,]
-D_350test = sclass350[-train_ind,]
+D_350train = sclass350[train_350ind,]
+D_350test = sclass350[-train_350ind,]
 
 # filter out NA's
 D_350train = D_350train %>% filter(!is.na(mileage)) %>% filter(!is.na(price))
@@ -55,7 +56,18 @@ y_350test = select(D_350test, price)
 lm1 = lm(price ~ mileage, data=D_350train)
 lm2 = lm(price ~ poly(mileage, 2), data=D_350train)
 
-# KNN 2
-knn2 = knn.reg(train = X_350train, test = X_350test, y = y_350train, k=2)
-names(knn250)
+# KNN
+knn = knn.reg(train = X_350train, test = X_350test, y = y_350train, k = 5)
+names(knn)
+
+ypred_knn = knn$pred
+D_350test$ypred_knn = ypred_knn
+
+p_test = ggplot(data = D_350test) + 
+  geom_point(mapping = aes(x = mileage, y = price), color='lightgrey') + 
+  theme_bw(base_size=18)
+p_test
+
+p_test + geom_point(aes(x = mileage, y = ypred_knn), color='red')
+p_test + geom_path(aes(x = mileage, y = ypred_knn), color='red')
 
