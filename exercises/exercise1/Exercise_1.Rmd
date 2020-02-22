@@ -348,7 +348,7 @@ N = (P - c)Q
 
 Step 2: Use the microeconomic model of quanity demanded, which is a function of the price.
 
-Q = f(P) = KP^E, so that N = (P - c)f(P) = (P-c)(KP^E).
+Q = f(P) = KP^E, so that N = (P - c)f(P) = (P-c)(KPE).
 
 The values of K and E are uknown, so we must estimate them from the data.
 
@@ -391,4 +391,4 @@ curve((x - c) * K * x^(E), from = 2.5, to = 2.7, xlab = "Price", ylab = "Sales")
 curve((x - c) * K * x^(E), from = 2.60, to = 2.63, xlab = "Price", ylab = "Sales")
 ```
 
-From the final plot, we see that the price that maximizes net profit is close to $2.62.
+From the final plot, we see that the price that maximizes net profit is close to 2.62.
