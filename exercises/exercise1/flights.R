@@ -19,7 +19,8 @@ ggplot(data = departure_delays_by_month) +
   geom_point(
     mapping = aes(x = delay, y = month),
     color = "red",
-    size = 3
+    size = 3,
+    alpha = 0.6
   ) +
   geom_vline(xintercept = 0, size = .25) +
   xlim(c(0, 20)) +
@@ -38,14 +39,13 @@ ggplot(data = arrival_delays_by_month) +
   geom_point(
     mapping = aes(x = delay, y = month),
     color = "red",
-    size = 3
+    size = 3,
+    alpha = 0.6
   ) +
   geom_vline(xintercept = 0, size = .25) +
   xlim(c(0, 20)) +
   scale_y_discrete(limits = rev(month.name)) +
   labs(title = "Median Arrival Delay by Month", y = "", x = "Delay in Minutes")
-
-## Which carriers were the most and least reliable in 2008?
 
 
 

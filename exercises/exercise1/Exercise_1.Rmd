@@ -1,0 +1,394 @@
+---
+title: SDS 323 Exercises 1
+author: Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
+date: 2/14/2020
+output: md_document
+---
+
+
+```{r setup, include = FALSE, message = FALSE, echo = FALSE}
+library(mosaic)
+library(tidyverse)
+library(RColorBrewer)
+library(kableExtra)
+library(knitr)
+library(ggthemes)
+abia = read.csv("./data/abia.csv")
+crt = read.csv("./data/creatinine.csv")
+grb = read.csv("./data/greenbuildings.csv")
+milk <- read.csv("./data/milk.csv")
+
+```
+## Problem 1: Flights at ABIA
+
+When planning travel from Austin, especially with connecting flights, consider cancellations and delays. This analysis shows the months and destinations which are the worst.
+
+```{r echo = FALSE}
+# filter out flights that are not cancelled
+cancelled = abia %>%
+  filter(Cancelled == 1)
+```
+
+```{r echo = FALSE}
+# group by destination and then summarize with count
+# top destinations
+ten_most_visited = abia %>% filter(Dest != "AUS") %>% group_by(Dest) %>% summarize(count = n()) %>% arrange(-count)
+
+ten_most_visited = ten_most_visited[1:10,]
+```
+
+```{r echo = FALSE}
+most_visited = abia[abia$Dest == ten_most_visited$Dest,]
+ten_most_visited = inner_join(abia, ten_most_visited, by = "Dest")
+```
+The graph below plots month and cancellation rate (out of all flights) for the top ten most frequented destinations out of the Austin-Bergstrom International Airport. 
+
+```{r echo = FALSE}
+ggplot(data = ten_most_visited, 
+  aes(x = Month, y = (Cancelled /(sum(Cancelled == 1))), fill = Dest))+
+  geom_bar(stat = "identity") + 
+  scale_fill_brewer(palette = "Spectral") + 
+  scale_x_discrete(limits = month.abb) +
+  ggtitle("Cancellation Rates for Top 10 Destinations") +
+  labs(y = "Cancellation Rate", x = "Month") +
+  labs(fill = "Destination")
+
+```
+
+One particularly surprising finding is that the largest proportion of cancelled flights occur in March and April, whereas October and November have very low cancellation rates. 
+
+Additionally, in most months, Dallas's major airports (DFW and DAL) experience a large fraction of cancellations, but in September, Houston's two major airports (HOU and IAH) do.
+
+To investigate this surprising pattern of cancellations, it is worth looking into delays for each month.
+
+```{r echo = FALSE}
+# Investigate median departure delays by month.
+
+departure_delays_by_month <- abia %>% 
+  group_by(Month) %>% 
+  filter(DepDelay > 0) %>% 
+  # Take the median since the distribution is highly skewed.
+  summarize(delay = median(DepDelay, na.rm = TRUE)) %>%
+  select(delay) %>% 
+  mutate(month = month.name)
+
+ggplot(data = departure_delays_by_month) +
+  geom_point(
+    mapping = aes(x = delay, y = month),
+    color = "red",
+    size = 3
+  ) +
+  geom_vline(xintercept = 0, size = .25) +
+  xlim(c(0, 20)) +
+  scale_y_discrete(limits = rev(month.name)) +
+  labs(title = "Median Departure Delay by Month", y = "", x = "Delay in Minutes")
+```
+
+Departure delays are also very low in October, but in contrast to the high number of cancellations in September, there are relatively few delays. December is worst for departure delays, alongside February and March.
+
+So, February and March are consistently bad for both cancellations and departure delays. December exhibits low cancellation rates but the highest departure delay times.
+
+That begs the question of whether arrival delays exhibit similar patterns.
+
+```{r echo = FALSE}
+arrival_delays_by_month <- abia %>% 
+  group_by(Month) %>% 
+  filter(ArrDelay > 0) %>% 
+  # Take the median since the distribution is highly skewed.
+  summarize(delay = median(ArrDelay, na.rm = TRUE)) %>%
+  select(delay) %>% 
+  mutate(month = month.name)
+
+ggplot(data = arrival_delays_by_month) +
+  geom_point(
+    mapping = aes(x = delay, y = month),
+    color = "red",
+    size = 3
+  ) +
+  geom_vline(xintercept = 0, size = .25) +
+  xlim(c(0, 20)) +
+  scale_y_discrete(limits = rev(month.name)) +
+  labs(title = "Median Arrival Delay by Month", y = "", x = "Delay in Minutes")
+
+```
+
+September through November experience relatively few arrival delays, and February and March still experience the greatest arrival delay time; however, the summer months experience more arrival delays than departure delays.
+
+December consistently has the greatest delay time, for both arrivals and departures.
+
+In sum, anticipate a greater chance of cancellations and delays in February and March, and delays in December. Since the highest cancellation rates for top destinations from the Austin-Bergstrom International Airport are within the state, it is worth considering  more reliable transportation options to guarantee reaching your destination.
+
+## Problem 2: Regression Practice (Creatinine)
+
+
+#### Question 1
+What creatinine clearance rate should we expect, on average, for a 55 year old?
+
+```{r echo = FALSE}
+# scatter plot comparing age and clearance rate
+ggplot(data = crt) + geom_point(mapping = aes(x = age, y = creatclear))
+```
+
+```{r echo = FALSE}
+# fit a linear model for creatclear vs age, where creatclear stands for creatinine clearance rate
+lm1 = lm(creatclear ~ age, data = crt)
+
+coef(lm1)
+```
+
+```{r  echo = FALSE}
+# plug in for age  --> 113.723
+new_data = data.frame(age = c(55))
+predict(lm1, new_data)
+```
+The predicted creatinine clearance rate for a 55-year old is 113.723 mL/minute.
+
+#### Question 2
+How does creatinine clearance rate change with age?
+```{r  echo = FALSE}
+# the slope coefficient for the linear model
+# coef(lm1)
+```
+The coefficient for the fitted linear model shows that creatinine clearance rate changes at a rate of -0.6198159 milliliters/minute per year.
+
+#### Question 3
+Whose creatinine clearance rate is healthier (higher) for their age: a 40-year-old with a rate of 135, or a 60-year-old with a rate of 112?
+```{r echo = FALSE}
+
+pred40 = data.frame(age = 40)
+resid40 = 135 - predict(lm1, pred40)
+predict(lm1, pred40)
+
+# actual - residual = predicted
+#135 - 11.97972 = 123.0203
+```
+
+```{r  echo = FALSE}
+pred60 = data.frame(age = 60)
+resid60 = 112 - predict(lm1, pred60)
+predict(lm1, pred60)
+
+# actual - residual = predicted
+# 112 - 1.376035 = 110.624
+```
+The person with the higher age-adjusted creatinine rate
+is 40 years old, since 123.0203 > 110.624.
+
+```{r  echo = FALSE}
+gf_point(creatclear~age, data=crt, size=3, alpha=0.8) %>% 
+  gf_labs(x="Age", y="Creatinine Clearance Rate (ml/min)", 
+          title="Creatinine Clearance Rate Decreases with Age") %>% 
+  gf_theme(theme_bw()) %>% 
+  gf_lm()
+```
+
+
+
+
+## Problem 3: Green Buildings
+Our investigation into the decision of whether or not to obtain a green certification contradicts the original report's findings. In particular, focusing more on the desired specifications of area, age, and class A distinction points to the fact that "green" buildings are not, in itself, a factor that results in higher rent. Further research needs to be done on building clusters to extract more precise estimates of other construction considerations. 
+
+To start, we filtered out the buildings with less than 10% occupancy.
+```{r echo = FALSE}
+
+
+grb = grb %>% 
+  filter(leasing_rate>=10)
+
+```
+
+Below is the table without any filter for size, resulting in the same figures as the previous report.
+```{r echo = FALSE}
+grb %>% 
+  group_by(green_rating) %>% 
+  summarize(median_rent = median(Rent, na.rm = TRUE)) %>% kable(col.names = c("Green Rating", "Median Rent"), caption = "Median Rent Overall") %>% kable_styling(full_width = F ,position = "left")
+
+```
+Since the building we plan to construct is 250,000 square feet, it would be appropriate to limit our focus to buildings within the relevant range of square footage. Below is the table with only buildings with square footage between 200,000 and 300,000. The difference in median rent for green and non-green is only \$0.84 per square foot, instead of the previous consultation of \$2.60 per square foot.
+```{r echo = FALSE}
+
+grb %>% filter(size >= 200000 & size <= 300000) %>% 
+  group_by(green_rating) %>% 
+  summarize(median_rent = median(Rent, na.rm = TRUE))%>% kable(col.names = c("Green Rating", "Median Rent"), caption = "Median Rent by Relevant Area") %>% kable_styling(full_width = F ,position = "left")
+```
+
+Therefore, the actual difference in median rent shows that the revenue generated by the green building is not as strong as the previous report suggests. Instead of 250,000 square feet multiplied by \$2.60 extra in revenue for the green building (\$650,000 per year), the difference in median rent for the relevant square footage more closely represents 250,000 * \$0.84, which is an additional \$210,000 per year, assuming the difference in rent is solely attributed to green buildings. This means that the payback period for a green building is much longer than the predicted 7.7 years from the previous report. There are other potential confounding factors that could also influence this $0.84 difference in rent, especially if green buildings are inherently correlated with certain attributes.
+
+Filtering further for age, since our building will be newly constructed, it is more relevant to focus on buildings that are less than 10 years old.
+```{r echo = FALSE}
+grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>% 
+  group_by(green_rating) %>% 
+  summarize(median_rent = median(Rent, na.rm = TRUE))%>% kable(col.names = c("Green Rating", "Median Rent"), caption = "Median Rent by Relevant Area and Age") %>% kable_styling(full_width = F ,position = "left")
+```
+The median rent for non-green buildings is actually much higher than that for green buildings if filtering for both square footage and age. Non-green buildings are shown to have a \$7.26 advantage over green buildings, not accounting for other confounding factors.
+
+The previous report's findings correctly filtered out outliers in terms of low occupancy but did not consider the relevant range for the desired building. The focus on newer buildings around 250,000 square feet allows for a more targeted comparison and reveals that simply comparing green and non-green buildings as a whole introduces a host of problems due to the vast range of possible building types.
+
+## Age Distribution for Non-Green and Green Buildings
+Green buildings are newer on average than non-green buildings. They are both positively skewed; however, the non-green distribution looks almost bimodal. The median is not necessarily be the best indicator, since the age is concentrated in two separate areas.
+
+```{r echo= FALSE}
+ggplot(grb, aes(x = age, group=factor(green_rating), fill=factor(green_rating))) +
+  geom_density(position = "identity", alpha=0.5) +
+  labs(x="Age", y="Proportion of Buildings", title="Green Buildings Tend to be Newer", fill="Green Rating")
+
+```
+
+
+## Class A and Green Rating
+Green buildings are more likely to be of Class A rating, which earn a higher median rent. This could be a problem, since it does not accurately represent the supposed advantage of green buildings on their own. It may be possible to earn a high rent without getting a green rating. 
+```{r echo=FALSE}
+
+grb <- grb %>% 
+  mutate(Build = factor(green_rating, levels = c(1,0),
+                        labels = c("Green Building", "Nongreen Building"))) %>% 
+  mutate(class=factor(class_a, levels=c(0,1), labels=c("Class B", "Class A")))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = Build, fill = factor(class)), position = "fill") +
+  scale_fill_brewer( palette = "Blues") +
+  labs(x="Green Rating", y="Proportion of Buildings", title="Most Green Buildings are Class A", fill="Class Rating")+
+  theme_few()
+
+grb %>% filter(size >= 200000 & size <= 300000 & age < 10) %>% 
+  group_by(class_a) %>% 
+  summarize(median_rent = median(Rent, na.rm = TRUE))%>% 
+  kable(col.names = c("Class A Rating", "Median Rent"), caption = "Median Rent by Relevant Area and Age for Class A") %>% 
+  kable_styling(full_width = F ,position = "left")
+```
+
+## Total Revenue of Non-Green and Green Buildings by Leasing Rate
+We calculated leasing rate, or occupancy rate, divided by 100, to obtain a decimal value; then, we multiplied by rent (per square foot) to get total revenues per square foot the company can gain.
+We explored the relationship between leasing rate and total revenues. 
+From a revenue perspective, the green building does not have a distinct advantage over non-green buildings. In addition, in our sample, the non-green buildings have a larger market than green buildings when the leasing rate is less than 50%. Furthermore, we know the cost of constructing a green building is higher than that of non-green buildings.
+
+```{r echo=FALSE}
+grb$total_r <- (grb$leasing_rate/100 * grb$Rent)
+ggplot(grb, aes(x = leasing_rate, y = total_r)) + 
+  geom_point(size = 1.5, alpha = 0.25) + 
+  facet_grid(. ~ Build) +
+  labs(x = "Leasing Rate", y = "Total Revenue (per square foot)")
+  
+```
+
+The graph below gives a clearer quantitative comparison of the total revenue by different leasing(occupancy) rates.
+
+```{r echo=FALSE}
+grb <- grb %>% 
+  mutate(leasing_catg = cut(leasing_rate, c(0,20, 40, 60, 80, 100)))
+ggplot(data = grb) +
+  geom_bar(mapping = aes(x = leasing_catg, y = total_r, 
+  fill = Build),
+  stat='identity', position ='dodge') +
+  theme_few() +
+  scale_fill_brewer( palette = "Blues") +
+  labs(title = "Quantitative Comparison of Per-Unit Revenue",
+       y = "Total Revenue (per square foot)",
+       x = "Leasing Rate",
+       fill = "Building")  
+```
+
+## Issues with Clusters
+
+The rent for each cluster has a wide range, and may possibly represent regional differences in rent. In addition, there is no information in the data set for the location of the clusters. As such, we are not able to pinpoint exactly what rent we could expect to charge since it varies so much across clusters. Further, the distribution is positively skewed; we don't know which side of the distribution the rent we charge would be on. It would be useful to gather location information on the clusters so that the analysis could compare buildings local to our planned construction site.
+
+```{r echo=FALSE}
+#data frame with clusters and cluster rents
+crent <- grb %>% 
+  group_by(cluster) %>% 
+  summarize(cr=mean(cluster_rent))
+favstats(~cr, data=crent) %>% kable()  %>% kable_styling()
+
+ggplot(data=crent, aes(x=cr))+
+  geom_density(fill="lightblue")+
+  labs(x="Cluster Rent", y="Density", title="Cluster Rent Distribution")
+
+```
+
+
+## Issues with Utility Costs
+Although gas costs are mostly concentrated around the same level, electricity costs have wild variation. Again, without knowing the specific location, we cannot know how the electricity and gas costs will factor into the rent.
+
+```{r echo=FALSE}
+#filter out the observations that are on a net contract basis
+grb_nonet = grb %>% 
+  filter(net==0)
+#since 
+
+ggplot(data=grb_nonet, aes(x=Gas_Costs))+
+  geom_density(fill="light green")+
+  labs(x="Gas Costs", y="Number of Buildings")
+
+ggplot(data=grb_nonet, aes(x=Electricity_Costs))+
+  geom_density(fill="yellow", alpha=0.7) +
+  labs(x="Electricity Costs", y="Number of Buildings")
+```
+
+
+The initial estimate given did not account for many of the variables that could account for rent for green buildings. In order to make a more fair comparison and a thorough analysis, more information, especially about clusters, is needed. But for starters, the comparison should be made for buildings of the similar size and age. The age distribution is skewed for both green and non-green buildings, so a simple average will not suffice. We showed that the Class A rating may be a confounding variable since most green buildings are Class A. Thus, it may be more worthwhile to pursue a Class A rating instead since buildings with this rating have a higher median rent than Class B buildings. Because rents are highly varied across clusters, and no information is given about the location of these cluster, we do not know how competitive the rent we charge would be, or if it is reasonable for our region. Electricity costs also have a wide range, and it would factor into the rent.
+
+
+## Problem 4: Milk Prices
+
+First, graph the data.
+
+```{r message = FALSE}
+ggplot(data = milk) +
+  geom_point(aes(x = price, y = sales)) +
+  geom_smooth(mapping = aes(x = price, y = sales))
+```
+
+Notice that this is not a linear relationship, which makes sense since
+quantity demanded is modeled in microeconomics using a Power Law:
+Q = KP^E,
+where Q is the quantity demanded, P is the price, E is the price elasticisty of demand and K is a constant.
+
+Step 1: Write an equation that expresses net profit N in terms of both Q and P (and cost c)
+
+N = (P - c)Q
+
+Step 2: Use the microeconomic model of quanity demanded, which is a function of the price.
+
+Q = f(P) = KP^E, so that N = (P - c)f(P) = (P-c)(KP^E).
+
+The values of K and E are uknown, so we must estimate them from the data.
+
+We can do this using linear regression using the product and power rules of logarithms, which tell us that ln(Q) = ln(KP^E) = ln(K) + E(ln(P)).
+
+This has the form of a simple linear regression, where B0 = ln(K) and 
+B1 = E.
+
+Step 3: Use simple linear regression to estimate the unknown coefficients.
+
+```{r}
+model <- lm(log(sales) ~ log(price), data = milk)
+```
+
+Confirm the linearity of the logarithm of the data by plotting.
+
+```{r}
+plot(log(sales) ~ log(price), data = milk)
+abline(model, col = "red")
+```
+
+Now we have an estimate of ln(K) in the form of the intercept of the model, `r round(coef(model)[1], 2)`, and of E in the form of the slope of the model, `r round(coef(model)[2], 2)`
+
+```{r echo = FALSE}
+K <- exp(coef(model)[1])
+E <- coef(model)[2]
+```
+
+Taking the exponential of both sides gives us net profit in terms of P and c alone,
+N =  (P - c)(112P^(-1.62))
+
+Let's assume c = 1.
+```{r}
+x <- milk$price
+c <- 1
+curve((x - c) * K * x^(E), from = 1, to = 9, xlab = "Price", ylab = "Sales")
+#Zoom in 
+curve((x - c) * K * x^(E), from = 2.5, to = 2.7, xlab = "Price", ylab = "Sales")
+#Zoom in more
+curve((x - c) * K * x^(E), from = 2.60, to = 2.63, xlab = "Price", ylab = "Sales")
+```
+
+From the final plot, we see that the price that maximizes net profit is close to $2.62.
