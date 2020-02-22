@@ -29,6 +29,10 @@ train_350ind = sample.int(N_350, N_350train, replace=FALSE)
 D_350train = sclass350[train_ind,]
 D_350test = sclass350[-train_ind,]
 
+# filter out NA's
+D_350train = D_350train %>% filter(!is.na(mileage)) %>% filter(!is.na(price))
+D_350test = D_350test %>% filter(!is.na(mileage)) %>% filter(!is.na(price))
+
 # optional book-keeping step:
 # reorder the rows of the testing set by the mileage variable
 # this isn't necessary, but it will allow us to make a pretty plot later
@@ -47,10 +51,11 @@ y_350test = select(D_350test, price)
 #####
 
 # linear and quadratic models
+
 lm1 = lm(price ~ mileage, data=D_350train)
 lm2 = lm(price ~ poly(mileage, 2), data=D_350train)
 
-# KNN 250
-knn250 = knn.reg(train = X_350train, test = X_350test, y = y_350train, k=250)
+# KNN 2
+knn2 = knn.reg(train = X_350train, test = X_350test, y = y_350train, k=2)
 names(knn250)
 
