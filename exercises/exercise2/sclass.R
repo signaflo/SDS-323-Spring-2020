@@ -13,9 +13,13 @@ dim(sclass350)
 sclass65AMG = subset(sclass, trim == '65 AMG')
 summary(sclass65AMG)
 
-# Look at price vs mileage for each trim level
-plot(price ~ mileage, data = sclass350)
-plot(price ~ mileage, data = sclass65AMG)
+# plot the data 
+ggplot(data = sclass350) +
+  geom_point(mapping = aes(x = mileage, y = price))
+
+ggplot(data = sclass65AMG) +
+  geom_point(mapping = aes(x = mileage, y = price))
+
 
 # train-test split for sclass 350
 N_350 = nrow(sclass350)
@@ -26,8 +30,8 @@ N_350test = N_350 - N_350train
 train_350ind = sample.int(N_350, N_350train, replace=FALSE)
 
 # Define the training and testing set
-D_350train = sclass350[train_ind,]
-D_350test = sclass350[-train_ind,]
+D_350train = sclass350[train_350ind,]
+D_350test = sclass350[-train_350ind,]
 
 # optional book-keeping step:
 # reorder the rows of the testing set by the mileage variable
