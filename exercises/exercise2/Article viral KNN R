@@ -1,6 +1,7 @@
 library(mosaic)
 library(tidyverse)
 library(FNN)
+library(car)
 library(ggplot2)
 
 arti = read.csv("~/Desktop/SDS 323/Exercises/Exercise 2/data/online_news.csv")
@@ -8,6 +9,9 @@ names(arti)
 summary(arti)
 
 
+# Creat a new variables 
+#arti$viral_f = arti$shares > 1400
+#arti$not_viral_f = arti$shares <= 1400
 
 arti <- arti %>% 
   mutate(vital = ifelse(shares > 1400, 1, 0))
@@ -31,7 +35,7 @@ D_test = arrange(D_test, n_tokens_content)
 head(D_test)
 
 X_train = model.matrix(~.-(url + is_weekend 
-                             + weekday_is_sunday) - 1, data=D_train)
+                             + weekday_is_sunday + vital) - 1, data=D_train)
 
 y_train = select(D_train, shares)
 
@@ -76,7 +80,7 @@ p_test = ggplot(data = D_test) +
 
 p_test
 
-p_test + geom_point(aes(x = n_tokens_content, y = ypred_knn3), color='red')
+
 p_test + geom_path(aes(x = n_tokens_content, y = ypred_knn3), color='red')
 
 
