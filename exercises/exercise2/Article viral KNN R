@@ -35,7 +35,7 @@ D_test = arrange(D_test, n_tokens_content)
 head(D_test)
 
 X_train = model.matrix(~.-(url + is_weekend 
-                             + weekday_is_sunday + vital) - 1, data=D_train)
+                             + weekday_is_sunday) - 1, data=D_train)
 
 y_train = select(D_train, shares)
 
