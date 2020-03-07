@@ -10,11 +10,8 @@ summary(arti)
 
 
 # Creat a new variables 
-#arti$viral_f = arti$shares > 1400
-#arti$not_viral_f = arti$shares <= 1400
-
 arti <- arti %>% 
-  mutate(vital = ifelse(shares > 1400, 1, 0))
+  mutate(viral = ifelse(shares > 1400, 1, 0))
 
 
 
@@ -35,12 +32,12 @@ D_test = arrange(D_test, n_tokens_content)
 head(D_test)
 
 X_train = model.matrix(~.-(url + is_weekend 
-                             + weekday_is_sunday) - 1, data=D_train)
+                           + weekday_is_sunday + viral) - 1, data=D_train)
 
 y_train = select(D_train, shares)
 
 X_test = model.matrix(~.- ( url + is_weekend 
-                            + weekday_is_sunday) - 1, data=D_test)
+                            + weekday_is_sunday + viral) - 1, data=D_test)
 
 
 y_test = select(D_test, shares)
@@ -49,7 +46,7 @@ y_test = select(D_test, shares)
 
 # KNN 
 knn3 = knn.reg(train = X_train, 
-                 test = X_test, y = y_train, k=3)
+               test = X_test, y = y_train, k=3)
 names(knn3)
 
 #####
