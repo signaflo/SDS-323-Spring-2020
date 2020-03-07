@@ -15,7 +15,7 @@ qplot(price, mileage, data=sclass65)
 #split into training and testing sets using an 80/20 split
 # train-test split for sclass 350
 N_350 = nrow(sclass350)
-N_350train = floor(0.8*N_350)
+N_350train = round(0.8*N_350)
 N_350test = N_350 - N_350train
 
 
@@ -43,8 +43,6 @@ y_350test = D_350test$price
 lm1_350 = lm(price ~ mileage, data=D_350train)
 lm2_350 = lm(price ~ poly(mileage, 2), data=D_350train)
 
-# KNN 250
-knn250 = knn.reg(train = x_350train, test = x_350test, y = y_350train, k=250)
 
 # define RMSE function
 rmse = function(actual, predicted) {
@@ -93,7 +91,7 @@ k_best350 = k_grid[ind_best350]
 
 g1 <- data.frame(k_best350, minrmse350=min(rmse_grid_out350$RMSE))
 g1
-p_out = ggplot(data=rmse_grid_out65) + 
+p_out = ggplot(data=rmse_grid_out350) + 
   geom_path(aes(x=K, y=RMSE), color="violet", size=1.5) + 
   geom_hline(yintercept=lm2_350rmse, color='blue', size=1) +
   geom_hline(yintercept=lm1_350rmse, color='red', size=1) +
@@ -102,6 +100,21 @@ p_out = ggplot(data=rmse_grid_out65) +
 
 p_out
 
+
+train_350ind = sort(sample.int(N_350, N_350train, replace=FALSE))
+D_350train = sclass350[train_ind,] 
+D_350train = arrange(D_350train, mileage)
+y_train350 = D_350train$price
+X_train350 = data.frame(mileage=jitter(D_350train$mileage))
+
+knn350 = FNN::knn.reg(X_train350, X_train350, y_train350, k = k_best350)
+
+subtitle350 = paste("Optimal K =", k_best350)
+D_350train$ypred = knn350$pred
+p_train = ggplot(data = D_350train) + 
+  geom_point(mapping = aes(x = mileage, y = price), color='lightgrey')
+p_train + geom_path(mapping = aes(x=mileage, y=ypred), color='red', size=1.5) +
+  labs(title="KNN model for 350 Trim", subtitle=subtitle350, x="Mileage", y="Price")
 
 
 ### Do the same for the 65 Trim
@@ -149,9 +162,9 @@ n65=length(y65)
 
 n65_train=round(0.8*n65)
 n65_test=n65-n65_train
-k_grid = seq(1, 100, by=1)
-rmse_grid_out65 = foreach(k = k_grid,  .combine='c') %do% {
-  out65 = do(300)*{
+k_grid65 = seq(1, 80, by=1)
+rmse_grid_out65 = foreach(k = k_grid65,  .combine='c') %do% {
+  out65 = do(500)*{
     train_ind = sample.int(n65, n65_train)
     X_train65 = x65[train_ind,]
     X_test65 = x65[-train_ind,]
@@ -166,7 +179,7 @@ rmse_grid_out65 = foreach(k = k_grid,  .combine='c') %do% {
 }
 
 
-plot(k_grid, rmse_grid_out65)
+plot(k_grid65, rmse_grid_out65)
 which.min(rmse_grid_out65)
 
 
@@ -176,10 +189,10 @@ lm1_65rmse = rmse(D_65test$price, y_pred65_1)
 y_pred65_2 = predict(lm2_65, D_65test)
 lm2_65rmse = rmse(D_65test$price, y_pred65_2)
 
-rmse_grid_out65 = data.frame(K = k_grid, RMSE = rmse_grid_out65)
+rmse_grid_out65 = data.frame(K = k_grid65, RMSE = rmse_grid_out65)
 
 ind_best65 = which.min(rmse_grid_out65$RMSE)
-k_best65 = k_grid[ind_best65]
+k_best65 = k_grid65[ind_best65]
 
 g2 <- data.frame(k_best65, minrmse65=min(rmse_grid_out65$RMSE))
 g2
@@ -193,6 +206,23 @@ g_out = ggplot(data=rmse_grid_out65) +
 g_out
 
 
+train_65ind = sort(sample.int(N_65, N_65train, replace=FALSE))
+D_65train = sclass65[train_65ind,] 
+D_65train = arrange(D_65train, mileage)
+y_train65 = D_65train$price
+X_train65 = data.frame(mileage=jitter(D_65train$mileage))
+
+knn65 = FNN::knn.reg(X_train65, X_train65, y_train65, k = k_best65)
+
+subtitle65 = paste("Optimal K =", k_best65)
+D_65train$ypred = knn65$pred
+g_train = ggplot(data = D_65train) + 
+  geom_point(mapping = aes(x = mileage, y = price), color='lightgrey')
+g_train + geom_path(mapping = aes(x=mileage, y=ypred), color='red', size=1.5) +
+  labs(title="KNN Model for 65 AMG Trim", subtitle= subtitle65, x="Mileage", y="Price")
+
+
+
 ### Why do the optimal Ks differ for each trim?
 sub65vs350 = sclass[sclass$trim %in% c("65 AMG", "350"),]
 favstats(~price, data=sclass65)
@@ -200,7 +230,10 @@ favstats(~price, data=sclass350)
 ggplot(data=sub65vs350, aes(x=trim, y=price)) +
   geom_boxplot()
 
+
+
 # It seems that the 65 trim has a much wider range, so KNN must be averaged over more points to avoid being 
 # affected by outliers. The KNN model thus "smooths" over the more erratic 65 trim dataset. In contrast, the 350 trim,
-# although its mean is being pulled downwards from low values, is more normally distributed than the 65 trim.
+# although its mean is being pulled downwards from low values, is more normally distributed and thus the optimal K is not
+# as affected by outliers.
 
