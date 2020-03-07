@@ -78,7 +78,7 @@ p_test
 
 p_test + geom_point(aes(x = n_tokens_content, y = ypred_knn3), color='red')
 p_test + geom_path(aes(x = n_tokens_content, y = ypred_knn3), color='red')
-p_test + geom_path(aes(x = n_tokens_content, y = ypred_knn3), color='red') 
+
 
 
 
