@@ -45,7 +45,7 @@ y_test = select(D_test, shares)
 
 # KNN 
 knn3 = knn.reg(train = X_train, 
-                 test = X_test, y = y_train, k=3000)
+                 test = X_test, y = y_train, k=3)
 names(knn3)
 
 #####
