@@ -1,0 +1,84 @@
+library(mosaic)
+library(tidyverse)
+library(FNN)
+library(ggplot2)
+
+arti = read.csv("~/Desktop/SDS 323/Exercises/Exercise 2/data/online_news.csv")
+names(arti)
+summary(arti)
+
+
+
+arti <- arti %>% 
+  mutate(vital = ifelse(shares > 1400, 1, 0))
+
+
+
+
+# Make a train - test split 
+N = nrow(arti)
+N_train = floor(0.8 * N)
+N_test = N - N_train
+
+train_ind = sample.int(N, N_train, replace=FALSE)
+
+
+D_train = arti[train_ind,]
+D_test = arti[-train_ind,]
+
+
+D_test = arrange(D_test, n_tokens_content)
+head(D_test)
+
+X_train = model.matrix(~.-(url + is_weekend 
+                             + weekday_is_sunday) - 1, data=D_train)
+
+y_train = select(D_train, shares)
+
+X_test = model.matrix(~.- ( url + is_weekend 
+                            + weekday_is_sunday) - 1, data=D_test)
+
+
+y_test = select(D_test, shares)
+
+
+
+# KNN 
+knn3 = knn.reg(train = X_train, 
+                 test = X_test, y = y_train, k=3000)
+names(knn3)
+
+#####
+# Compare the models by RMSE_out
+#####
+
+
+rmse = function(y, ypred) {
+  sqrt(mean(data.matrix((y-ypred)^2)))
+}
+
+
+ypred_knn3 = knn3$pred
+
+# Calculate the root mean square error
+
+
+rmse(y_test, ypred_knn3)
+
+
+#Plot the fit 
+
+D_test$ypred_knn3 = ypred_knn3
+
+p_test = ggplot(data = D_test) + 
+  geom_point(aes(x = n_tokens_content , y = ypred_knn3), color='black') +
+  theme_bw(base_size=18) 
+
+p_test
+
+p_test + geom_point(aes(x = n_tokens_content, y = ypred_knn3), color='red')
+p_test + geom_path(aes(x = n_tokens_content, y = ypred_knn3), color='red')
+p_test + geom_path(aes(x = n_tokens_content, y = ypred_knn3), color='red') 
+
+
+
