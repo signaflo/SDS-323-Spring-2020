@@ -39,14 +39,14 @@ ggplot(data = SaratogaHouses) +
 ggplot(data = SaratogaHouses, aes(waterfront, price, color = centralAir)) +
   geom_boxplot()
 
-rmse_vals <- do(200) * {
+rmse_vals <- do(250) * {
   train_cases <- sample.int(n, n_train, replace=FALSE)
   test_cases <- setdiff(1:n, train_cases)
   saratoga_train <- SaratogaHouses[train_cases,]
   saratoga_test <- SaratogaHouses[test_cases,]
   
   model <- lm(price ~  age * pctCollege + livingArea * rooms * bathrooms +
-                livingArea * bedrooms * rooms +
+                livingArea * rooms * bedrooms +
                 centralAir * livingArea + newConstruction + 
                 fuel + waterfront + log(pctCollege), data = saratoga_train)
   
@@ -57,4 +57,9 @@ rmse_vals <- do(200) * {
 }
 
 mean(rmse_vals$result)
+
+
+library(FNN)
+
+
 
