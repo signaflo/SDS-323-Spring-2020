@@ -30,7 +30,7 @@ X_train = model.matrix(shares ~ n_tokens_title +
                          num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
                          data_channel_is_bus + data_channel_is_socmed +
                          data_channel_is_tech + data_channel_is_world +
-                         self_reference_min_shares  + avg_negative_polarity, data=D_train)
+                         self_reference_min_shares  + avg_negative_polarity - 1, data=D_train)
 
 y_train = select(D_train, shares)
 
@@ -39,7 +39,7 @@ X_test = model.matrix(shares ~ n_tokens_title +
                         num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
                         data_channel_is_bus + data_channel_is_socmed +
                         data_channel_is_tech + data_channel_is_world +
-                        self_reference_min_shares  + avg_negative_polarity, data=D_test)
+                        self_reference_min_shares  + avg_negative_polarity - 1, data=D_test)
 
 y_test = select(D_test, shares)
 
@@ -75,21 +75,16 @@ rmse(y_test, ypred_knn3)
 
 D_test$ypred_knn3 = ypred_knn3
 
-p_test = ggplot(data = D_test) + 
-  geom_point(aes(x = n_tokens_content , y = ypred_knn3), color='black') +
-  theme_bw(base_size=18) 
-
-p_test
-
-p_test + geom_point(aes(x = n_tokens_content, y = ypred_knn3), color='red')
-p_test + geom_path(aes(x = n_tokens_content, y = ypred_knn3), color='red')
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
 # first use the binary responses to get a confusion matrix of probabilities
-
+k_grid = seq(1, 300, by=2)
 
 confusion_valse = 
-  do(20) * {
+  foreach(k = k_grid,  .combine='c') %do% {
+  out = do(1)*{
+  
+  # do(2) * {
     # re-split into train and test cases with the same sample sizes
     train_ind = sample.int(N, N_train, replace=FALSE)
     
@@ -126,7 +121,7 @@ confusion_valse =
     
     # KNN 
     knn3 = knn.reg(train = X_train, 
-                   test = X_test, y = y_train, k=31)
+                   test = X_test, y = y_train, k=k)
     
     ##debug NOT SURE IF WE NEED TO MAKE A CONFUSION MATRIX FOR IN SAMPLE ALSO
     
@@ -138,19 +133,22 @@ confusion_valse =
     sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
     
     # overall error rate
-    
+    1 - sum(diag(confusion_out))/sum(confusion_out)
     # true positive rate
     
     # false positive rate 
     
     #across multiple train/test splits!!!!!
   }
-
+  mean(out$result)
+}
 confusion_valse
-colMeans(confusion_valse)
+mean(confusion_valse[[1]])
 
-
+plot(k_grid, confusion_valse)
 # got 0.500454  (do 20x), as opposed to guessing "not viral" which got 0.5065584
+# 0.5056123 with K = 1 through 300 by 2
+# aim for 0.53 (another group at office hours)
 
 # compare this to a null model that always predicts "not viral"
 # lm_lame = lm(!viral ~ 1, data = arti)
@@ -159,6 +157,4 @@ colMeans(confusion_valse)
 
 ## Classification Approach
 # do viral status as a target variable
-
-
 
