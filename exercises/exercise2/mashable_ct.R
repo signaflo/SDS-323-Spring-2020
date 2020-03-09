@@ -78,7 +78,7 @@ D_test$ypred_knn3 = ypred_knn3
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
 # first use the binary responses to get a confusion matrix of probabilities
-k_grid = seq(1, 300, by=2)
+k_grid <- exp(seq(log(500), log(900), length=75)) %>% round %>% unique
 
 confusion_valse = 
   foreach(k = k_grid,  .combine='c') %do% {
@@ -128,17 +128,17 @@ confusion_valse =
     # out of sample confusion matrix
     viral_prediction = ifelse(ypred_knn3 > 1400, 1, 0)
     confusion_out = table(y = D_test$viral, yhat = viral_prediction)
-    confusion_out
+    # confusion_out
     
     sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
     
-    # overall error rate
-    1 - sum(diag(confusion_out))/sum(confusion_out)
-    # true positive rate
-    
-    # false positive rate 
-    
-    #across multiple train/test splits!!!!!
+    # # overall error rate
+    # 1 - sum(diag(confusion_out))/sum(confusion_out)
+    # # true positive rate
+    # confusion_out[2,2]/(confusion_out[2, 1] + confusion_out[2,2])
+    # # false positive rate 
+    # confusion_out[1,2]/(confusion_out[1,1] + confusion_out[1,2])
+    # #across multiple train/test splits!!!!!
   }
   mean(out$result)
 }
