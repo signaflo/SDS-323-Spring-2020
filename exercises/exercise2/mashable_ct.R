@@ -3,6 +3,7 @@ library(tidyverse)
 library(FNN)
 library(ggplot2)
 library(caret)
+library(foreach)
 
 arti = read.csv("online_news.csv")
 names(arti)
@@ -78,11 +79,12 @@ D_test$ypred_knn3 = ypred_knn3
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
 # first use the binary responses to get a confusion matrix of probabilities
-k_grid <- exp(seq(log(500), log(900), length=75)) %>% round %>% unique
-
+k_grid <- exp(seq(log(1), log(500), length=40)) %>% round %>% unique
+k_grid <- k_grid[k_grid != 2]
+k_grid
 confusion_valse = 
   foreach(k = k_grid,  .combine='c') %do% {
-  out = do(1)*{
+  out = do(10)*{
   
   # do(2) * {
     # re-split into train and test cases with the same sample sizes
@@ -124,7 +126,7 @@ confusion_valse =
                    test = X_test, y = y_train, k=k)
     
     ##debug NOT SURE IF WE NEED TO MAKE A CONFUSION MATRIX FOR IN SAMPLE ALSO
-    
+    ypred_knn3 = knn3$pred
     # out of sample confusion matrix
     viral_prediction = ifelse(ypred_knn3 > 1400, 1, 0)
     confusion_out = table(y = D_test$viral, yhat = viral_prediction)
