@@ -1,0 +1,227 @@
+library(mosaic)
+library(tidyverse)
+library(FNN)
+library(car)
+library(foreach)
+library(ggplot2)
+
+
+arti = read.csv("~/Desktop/SDS 323/Exercises/Exercise 2/data/online_news.csv")
+names(arti)
+summary(arti)
+
+
+
+# Creat a new variables 
+arti <- arti %>% 
+  mutate(viral = ifelse(shares > 1400, 1, 0))
+
+# Test the multicollinearity
+lm0 = lm(shares ~ . - url, data = arti)
+summary(lm0)
+
+lm1 = lm(shares ~ . - url - is_weekend                             - weekday_is_sunday, data = arti)
+
+summary(lm1)
+vif(lm1)
+# Remove: self_reference_min_shares,  self_reference_max_shares, min_negative_polarity 
+
+
+
+# Make a train - test split 
+N = nrow(arti)
+N_train = floor(0.8 * N)
+N_test = N - N_train
+
+train_ind = sample.int(N, N_train, replace=FALSE)
+test_ind = setdiff(1:N, train_ind)
+
+
+
+D_train = arti[train_ind,]
+D_test = arti[-train_ind,]
+
+
+
+
+X_train = model.matrix(~.-(url + is_weekend 
+                           + weekday_is_sunday + viral + shares) - 1, data=D_train)
+
+y_train = select(D_train, shares)
+
+X_test = model.matrix(~.- (url + is_weekend 
+                            + weekday_is_sunday + viral + shares) - 1, data=D_test)
+
+
+y_test = select(D_test, shares)
+
+
+
+# KNN 
+knn3 = knn.reg(train = X_train, 
+               test = X_test, y = y_train, k=3)
+
+ypred_knn3 <- knn3$pred
+
+# Compare the models by RMSE_out
+
+
+rmse = function(y, ypred) {
+  sqrt(mean(data.matrix((y-ypred)^2)))
+}
+
+
+# Calculate the root mean square error
+rmse(y_test, ypred_knn3)
+
+#Let's try many values of K:
+
+k_grid = exp(seq(log(1), log(), length=10)) %>% round %>% unique 
+rmse_grid= foreach(K = k_grid, .combine='c') %do% {       
+  knn_model = knn.reg(X_train, X_test, y_train, k=K)    
+
+  rmse(y_test, knn_model$pred) 
+}
+
+#plot(k_grid, rmse_grid, log='x') 
+#abline(h=rmse(y_test, yhat_test2)
+
+N = nrow(arti)
+N_train = floor(0.8 * N)
+N_test = N - N_train
+
+
+k_grid <- 
+rmse_vals = do(10) * {
+  
+  
+  train_ind = sample.int(N, N_train)
+  test_ind = setdiff(1:N, train_ind)
+  D_train = arti[train_ind,]
+  D_test = arti[-train_ind,]
+  
+
+  knn3 = knn.reg(train = X_train, 
+                 test = X_test, y = y_train, k=3)
+  names(knn3)
+  ypred_knn3 <- knn3$pred
+  
+  rmse(y_test, ypred_knn3)
+  
+}
+
+rmse_vals
+colMeans(rmse_vals)
+boxplot(rmse_vals)
+
+
+###############
+#Viral classification
+#lm_viral = lm(viral ~ . - url - is_weekend                             - weekday_is_sunday - shares - viral, data = arti)
+#coef(lm_viral)
+
+# Out of sample performance 
+set.seed(1)
+knn3 = knn.reg(train = X_train, 
+               test = X_test, y = y_train, k=3)
+ypred_knn3 <- knn3$pred
+
+
+yhat_test_viral1 = ifelse(ypred_knn3 > 1400,1, 0)
+confusion_out = table(knn.pred = yhat_test_viral1, Actu = D_test$viral) 
+summary(confusion_out)
+confusion_out
+
+# Matrix
+colnames(confusion_out) <- c("TN","FP")
+rownames(confusion_out) <- c("FN","TP")
+confusion_out
+
+# 
+TP = confusion_out[2,2] / sum(confusion_out[,2])
+TP
+TN = confusion_out[1,1] / sum(confusion_out[,1])
+TN
+# Overall Error Rate ERR = (FN + FP) 
+FN = confusion_out[1,2] / sum(confusion_out[,2])
+FP = confusion_out[2,1] / sum(confusion_out[,1])
+ERR = FN + FP
+
+
+#null model
+null = lm(shares ~ 1, data=arti)
+
+
+
+
+
+# Second Pass
+
+# Second Pass
+standardized.X = scale(arti[, -1])
+# Check 
+var(arti[,2])
+var(standardized.X[,2])
+
+# Make a train - test split 
+N = nrow(arti)
+N_train2 = floor(0.8 * N)
+N_test2 = N - N_train
+
+train_ind2 = sample.int(N, N_train2, replace=FALSE)
+
+
+D_train2 = arti[train_ind2,]
+D_test2 = arti[-train_ind2,]
+
+X_train2 = model.matrix(~.-(url + is_weekend 
+                           + weekday_is_sunday + viral + shares) - 1, data=D_train2)
+
+y_train2 = select(D_train2, viral)
+
+X_test2 = model.matrix(~.- ( url + is_weekend 
+                            + weekday_is_sunday + viral + shares) - 1, data=D_test2)
+
+y_test2 = select(D_test2, viral)
+
+
+
+# KNN 
+knn3_2 = knn.reg(train = X_train2, 
+               test = X_test2, y = y_train2, k=3)
+
+
+rmse = function(y, ypred) {
+  sqrt(mean(data.matrix((y-ypred)^2)))
+}
+
+
+ypred_knn3_2 = knn3_2$pred
+
+# Calculate the root mean square error
+rmse(y_test2, ypred_knn3_2)
+
+# Out of sample performance 
+set.seed(1)
+yhat_test_viral2 = ifelse(ypred_knn3_2 > 0.5,1, 0)
+confusion_out_2 = table(knn.pred = yhat_test_viral2, Actu = D_test2$viral) 
+
+
+confusion_out_2
+# Matrix
+colnames(confusion_out_2) <- c("TN","FP")
+rownames(confusion_out_2) <- c("FN","TP")
+confusion_out
+# Out of sample accuracy (True Positive)
+TP = confusion_out_2[2,2] / sum(confusion_out_2[,2])
+TP
+TN = confusion_out_2[1,1] / sum(confusion_out_2[,1])
+TN
+# Overall Error Rate ERR = (FN + FP) 
+FN = confusion_out_2[1,2] / sum(confusion_out_2[,2])
+FP = confusion_out_2[2,1] / sum(confusion_out_2[,1])
+ERR = FN + FP
+
+
+
+
