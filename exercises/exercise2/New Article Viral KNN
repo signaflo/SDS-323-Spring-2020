@@ -20,7 +20,7 @@ arti <- arti %>%
 lm0 = lm(shares ~ . - url, data = arti)
 summary(lm0)
 
-lm1 = lm(shares ~ . - url - is_weekend                             - weekday_is_sunday, data = arti)
+lm1 = lm(shares ~ . - url - is_weekend - weekday_is_sunday, data = arti)
 
 summary(lm1)
 vif(lm1)
@@ -54,8 +54,6 @@ X_test = model.matrix(~.- (url + is_weekend
 
 
 y_test = select(D_test, shares)
-
-
 
 # KNN 
 knn3 = knn.reg(train = X_train, 
@@ -117,7 +115,7 @@ boxplot(rmse_vals)
 
 ###############
 #Viral classification
-#lm_viral = lm(viral ~ . - url - is_weekend                             - weekday_is_sunday - shares - viral, data = arti)
+#lm_viral = lm(viral ~ . - url - is_weekend - weekday_is_sunday - shares - viral, data = arti)
 #coef(lm_viral)
 
 # Out of sample performance 
@@ -145,8 +143,6 @@ TN
 # Overall Error Rate ERR = (FN + FP) 
 FN = confusion_out[1,2] / sum(confusion_out[,2])
 FP = confusion_out[2,1] / sum(confusion_out[,1])
-ERR = FN + FP
-
 
 #null model
 null = lm(shares ~ 1, data=arti)
