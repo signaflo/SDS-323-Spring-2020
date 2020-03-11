@@ -220,7 +220,7 @@ TN
 # Overall Error Rate ERR = (FN + FP) 
 FN = confusion_out_2[1,2] / sum(confusion_out_2[,2])
 FP = confusion_out_2[2,1] / sum(confusion_out_2[,1])
-ERR = FN + FP
+
 
 
 
