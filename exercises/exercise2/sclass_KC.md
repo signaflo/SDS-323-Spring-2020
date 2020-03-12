@@ -5,25 +5,25 @@ Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
 
 ## Problem 1: S Class
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->![](sclass_KC_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-1-1.png)<!-- -->![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-1-2.png)<!-- -->
 
 We start with the 350 trim model and find the optimal K that minimizes
 the RMSE after iterating through many train-test splits. Then we compare
 the KNN model to linear regression models, one of which predicts price
 using mileage, and the other uses a polynomial of mileage predicting
-price. The red line is the RMSE for the linear regression model and teh
-blude line is the second-degree polynomial.
+price. The red line is the RMSE for the linear regression model and the
+blue line is the second-degree polynomial.
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-2-1.png)<!-- -->
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-3-1.png)<!-- -->
 
 Do the same for the 65 Trim Train-test split for sclass
     65
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-4-1.png)<!-- -->
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-5-1.png)<!-- -->
 
     ##    min       Q1  median     Q3    max     mean       sd   n missing
     ##  18990 48711.25 79994.5 225975 247075 117121.1 81315.27 292       0
@@ -33,11 +33,11 @@ Do the same for the 65 Trim Train-test split for sclass
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-6-1.png)<!-- -->
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](sclass_KC_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-6-2.png)<!-- -->
 
 ## Conclusion
 
