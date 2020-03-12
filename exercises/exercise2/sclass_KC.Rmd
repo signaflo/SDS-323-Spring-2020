@@ -2,7 +2,7 @@
 title: sclass_KC
 author: Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
 date: 3/13/2020
-output: github_document
+output: md_document
 ---
 
 ```{r setup, include = FALSE, message = FALSE, echo = FALSE}
