@@ -1,8 +1,8 @@
 ---
-title: "sclass_KC"
+title: sclass_KC
 author: Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
 date: 3/13/2020
-output: md_document
+output: github_document
 ---
 
 ```{r setup, include = FALSE, message = FALSE, echo = FALSE}
@@ -15,6 +15,7 @@ sclass = read.csv("data/sclass.csv")
 set.seed(909)
 ```
 
+## Problem 1: S Class
 
 ```{r echo=FALSE}
 #subset into 65 and 65 AMG trim
@@ -29,10 +30,7 @@ ggplot(data=sclass65, aes(x=price, y=mileage)) +
 ```
 
 
-
-
-We start with the 350 trim model and find the optimal K that minimizes the RMSE after iterating through many train-test splits. Then we compare the KNN model to linear regression models, one of which predicts price using mileage, and the other uses a polynomial of mileage predicting price. The red line is the RMSE for the linear regression model and teh blude line is the second-degree polynomial.
-
+We start with the 350 trim model and find the optimal K that minimizes the RMSE after iterating through many train-test splits. Then we compare the KNN model to linear regression models, one of which predicts price using mileage, and the other uses a polynomial of mileage predicting price. The red line is the RMSE for the linear regression model and the blue line is the second-degree polynomial.
 
 
 
@@ -111,7 +109,10 @@ p_out = ggplot(data=rmse_grid_out350) +
        x="K", y="Root Mean Squared Error (RMSE)")
 
 p_out
+```
 
+
+```{r echo=FALSE}
 #fitting the KNN Model
 train_350ind = sort(sample.int(N_350, N_350train, replace=FALSE))
 D_350train = sclass350[train_ind,] 
@@ -207,7 +208,9 @@ g_out = ggplot(data=rmse_grid_out65) +
        x="K", y="Root Mean Squared Error (RMSE)")
 
 g_out
+```
 
+```{r echo=FALSE}
 #fitting the KNN Model
 train_65ind = sort(sample.int(N_65, N_65train, replace=FALSE))
 D_65train = sclass65[train_65ind,] 
