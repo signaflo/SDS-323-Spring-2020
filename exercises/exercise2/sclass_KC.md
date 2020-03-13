@@ -1,11 +1,7 @@
-sclass\_KC
-================
-Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
-3/13/2020
+Problem 1: S Class
+------------------
 
-## Problem 1: S Class
-
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-1-1.png)<!-- -->![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-1-2.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-1-1.png)![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-1-2.png)
 
 We start with the 350 trim model and find the optimal K that minimizes
 the RMSE after iterating through many train-test splits. Then we compare
@@ -14,32 +10,156 @@ using mileage, and the other uses a polynomial of mileage predicting
 price. The red line is the RMSE for the linear regression model and the
 blue line is the second-degree polynomial.
 
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-2-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-2-1.png)
 
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-3-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-3-1.png)
 
-Do the same for the 65 Trim Train-test split for sclass
-    65
+Do the same for the 65 Trim Train-test split for sclass 65
 
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-4-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-4-1.png)
 
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-5-1.png)<!-- -->
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
-    ##    min       Q1  median     Q3    max     mean       sd   n missing
-    ##  18990 48711.25 79994.5 225975 247075 117121.1 81315.27 292       0
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+Q1
+</th>
+<th style="text-align:right;">
+median
+</th>
+<th style="text-align:right;">
+Q3
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+missing
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+18990
+</td>
+<td style="text-align:right;">
+48711.25
+</td>
+<td style="text-align:right;">
+79994.5
+</td>
+<td style="text-align:right;">
+225975
+</td>
+<td style="text-align:right;">
+247075
+</td>
+<td style="text-align:right;">
+117121.1
+</td>
+<td style="text-align:right;">
+81315.27
+</td>
+<td style="text-align:right;">
+292
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+Q1
+</th>
+<th style="text-align:right;">
+median
+</th>
+<th style="text-align:right;">
+Q3
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+missing
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+6600
+</td>
+<td style="text-align:right;">
+19401.25
+</td>
+<td style="text-align:right;">
+52900
+</td>
+<td style="text-align:right;">
+61991.25
+</td>
+<td style="text-align:right;">
+106010
+</td>
+<td style="text-align:right;">
+46854.32
+</td>
+<td style="text-align:right;">
+22842.57
+</td>
+<td style="text-align:right;">
+416
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-6-1.png)![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-6-2.png)
 
-    ##   min       Q1 median       Q3    max     mean       sd   n missing
-    ##  6600 19401.25  52900 61991.25 106010 46854.32 22842.57 416       0
-
-    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-6-1.png)<!-- -->
-
-    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-
-![](sclass_KC_files/figure-markdown_strict/unnamed-chunk-6-2.png)<!-- -->
-
-## Conclusion
+Conclusion
+----------
 
 It seems that the 65 trim has a much wider range, so the best KNN model
 generalizes over that variation. In contrast, the 350 trim, although its

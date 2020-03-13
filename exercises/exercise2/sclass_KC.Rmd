@@ -10,6 +10,7 @@ library(tidyverse)
 library(FNN)
 library(mosaic)
 library(foreach)
+library(kableExtra)
 
 sclass = read.csv("data/sclass.csv")
 set.seed(909)
@@ -231,14 +232,14 @@ g_train + geom_path(mapping = aes(x=mileage, y=ypred), color='red', size=1.5) +
 ```{r echo=FALSE}
 ### Why do the optimal Ks differ for each trim?
 sub65vs350 = sclass[sclass$trim %in% c("65 AMG", "350"),]
-favstats(~price, data=sclass65)
-favstats(~price, data=sclass350)
+favstats(~price, data=sclass65) %>% kable()
+favstats(~price, data=sclass350) %>% kable()
 
 ggplot(sclass350, aes(x=mileage))+ 
-  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
   geom_density(alpha=.2, fill="#FF6666") 
 ggplot(sclass65, aes(x=mileage))+ 
-  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
   geom_density(alpha=.2, fill="#FF6666") 
 ```
 
