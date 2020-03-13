@@ -5,7 +5,7 @@ library(class)
 library(car)
 library(foreach)
 library(ggplot2)
-
+library(caret)
 
 arti = read.csv("~/Desktop/SDS 323/Exercises/Exercise 2/data/online_news.csv")
 names(arti)
@@ -145,7 +145,7 @@ y = arti$viral
 # Make a train - test split 
 N = nrow(arti)
 N_train2 = floor(0.8 * N)
-N_test2 = N - N_train
+N_test2 = N - N_train2
 
 train_ind2 = sample.int(N, N_train2, replace=FALSE)
 D_train2 = arti[train_ind2,]
@@ -163,22 +163,64 @@ y_test2 = y[-train_ind2]
 
 
 # KNN 
-knn3_2 = class::knn(train = X_train2, 
+knn3_2 = knn(train = X_train2, 
                test = X_test2, cl = y_train2, k=3)
 
 
-rmse = function(y, ypred) {
-  sqrt(mean(data.matrix((y-ypred)^2)))
+# put the data and predictions in a single data frame
+knn_trainset = data.frame(X_train2, type = y_train2)
+knn3_testset = data.frame(X_test2, type = y_test2, 
+                          type_pred = knn3_2)
+
+
+# test set errors
+knn3_testset$pred
+
+# Make a table of classification errors
+calc_class_err = function(actual, predicted) {
+  mean(actual != predicted)
 }
 
-ypred_knn3_2 = knn3_2$pred
+calc_class_err(actual = y_test2,
+               predicted = knn(train = X_train2,
+                               test  = X_test2,
+                                  cl = y_train2,
+                                  k = 100))
+
+
+# Find a good K
+k_to_try = 1:30
+err_k = rep(x = 0, times = length(k_to_try))
+
+for (i in seq_along(k_to_try)) {
+  pred = knn(train = scale(X_train2), 
+             test  = scale(X_test2), 
+             cl    = y_train2, 
+             k     = k_to_try[i])
+  err_k[i] = calc_class_err(y_test2, pred)
+}
+  
+
+
+plot(err_k, type = "b", col = "dodgerblue", cex = 1, pch = 20, 
+     xlab = "k, number of neighbors", ylab = "classification error",
+     main = "(Test) Error Rate vs Neighbors")
+
+min(err_k)
+which(err_k == min(err_k))
+table(y_test2)
+mean(y_test2 == "1")
+mean(y_test2 == "0")
+
+############################ the rest will be confusion matrix
 
 # Calculate the root mean square error
-rmse(y_test2, ypred_knn3_2)
 
+rmse(y_test2, knn3_2)
+table(knn3_2)
 # Out of sample performance 
 set.seed(1)
-yhat_test_viral2 = ifelse(ypred_knn3_2 > 0.5,1, 0)
+yhat_test_viral2 = ifelse(knn3_testset > 0.5,1, 0)
 confusion_out_2 = table(knn.pred = yhat_test_viral2, Actu = D_test2$viral) 
 
 confusion_out_2
