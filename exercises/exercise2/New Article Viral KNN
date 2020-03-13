@@ -56,6 +56,9 @@ knn3 = knn.reg(train = X_train,
 
 ypred_knn3 <- knn3$pred
 
+
+
+
 # Compare the models by RMSE
 
 rmse = function(y, ypred) {
@@ -99,18 +102,18 @@ boxplot(rmse_vals)
 # Out of sample performance 
 set.seed(1)
 knn3 = knn.reg(train = X_train, 
-               test = X_test, y = y_train, k=3)
+               test = X_test, y = y_train, k=100)
 ypred_knn3 <- knn3$pred
 
 
 yhat_test_viral1 = ifelse(ypred_knn3 > 1400,1, 0)
-confusion_out = table(knn.pred = yhat_test_viral1, Actu = D_test$viral) 
+confusion_out = table(knn.pred = yhat_test_viral1, Actural = D_test$viral) 
 summary(confusion_out)
 confusion_out
 
 # Matrix
-colnames(confusion_out) <- c("TN","FP")
-rownames(confusion_out) <- c("FN","TP")
+colnames(confusion_out) <- c("Not Viral","Viral")
+rownames(confusion_out) <- c("Not Viral","Viral")
 confusion_out
 
 # 
@@ -118,7 +121,7 @@ TP = confusion_out[2,2] / sum(confusion_out[,2])
 TP
 TN = confusion_out[1,1] / sum(confusion_out[,1])
 TN
-# Overall Error Rate ERR = (FN + FP) 
+# Overall Error Rate 
 FN = confusion_out[1,2] / sum(confusion_out[,2])
 FP = confusion_out[2,1] / sum(confusion_out[,1])
 
@@ -173,9 +176,6 @@ knn3_testset = data.frame(X_test2, type = y_test2,
                           type_pred = knn3_2)
 
 
-# test set errors
-knn3_testset$pred
-
 # Make a table of classification errors
 calc_class_err = function(actual, predicted) {
   mean(actual != predicted)
@@ -200,8 +200,6 @@ for (i in seq_along(k_to_try)) {
   err_k[i] = calc_class_err(y_test2, pred)
 }
   
-
-
 plot(err_k, type = "b", col = "dodgerblue", cex = 1, pch = 20, 
      xlab = "k, number of neighbors", ylab = "classification error",
      main = "(Test) Error Rate vs Neighbors")
@@ -212,30 +210,26 @@ table(y_test2)
 mean(y_test2 == "1")
 mean(y_test2 == "0")
 
-############################ the rest will be confusion matrix
-
-# Calculate the root mean square error
-
-rmse(y_test2, knn3_2)
-table(knn3_2)
 # Out of sample performance 
 set.seed(1)
-yhat_test_viral2 = ifelse(knn3_testset > 0.5,1, 0)
-confusion_out_2 = table(knn.pred = yhat_test_viral2, Actu = D_test2$viral) 
+confusion_out_2 = table(knn.pred = knn3_2, Actu = D_test2$viral) 
 
 confusion_out_2
 # Matrix
-colnames(confusion_out_2) <- c("TN","FP")
-rownames(confusion_out_2) <- c("FN","TP")
-confusion_out
+colnames(confusion_out_2) <- c("Not Viral","Viral")
+rownames(confusion_out_2) <- c("Not Viral","Viral")
+confusion_out_2
+
 # Out of sample accuracy (True Positive)
 TP = confusion_out_2[2,2] / sum(confusion_out_2[,2])
 TP
 TN = confusion_out_2[1,1] / sum(confusion_out_2[,1])
 TN
-# Overall Error Rate ERR = (FN + FP) 
+# Overall Error Rate 
 FN = confusion_out_2[1,2] / sum(confusion_out_2[,2])
+
 FP = confusion_out_2[2,1] / sum(confusion_out_2[,1])
+
 
 
 
