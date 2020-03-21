@@ -1,0 +1,361 @@
+---
+title: sclass_KC
+author: Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan
+date: 3/18/2020
+# output: md_document
+output: HTML_document
+---
+
+```{r setup, include = FALSE, message = FALSE, echo = FALSE}
+library(tidyverse)
+library(FNN)
+library(mosaic)
+library(foreach)
+library(ggplot2)
+library(scales)
+library(kableExtra)
+# sclass = read.csv("data/sclass.csv")
+sclass = read.csv("sclass.csv")
+set.seed(909)
+```
+
+## Problem 1: S Class
+
+The Mercedes S Class is an unusual car model name that encompasses a broad range of cars with vastly different characteristics, making it tough to accurately predict pricing. 
+
+For this analysis, only two trims were compared: 350 and 65 AMG. Since 65 AMG cars are among the higher horsepower offerings by Mercedes, they are much more expensive and not as many are sold, explaining why there are fewer observations than the 350 trim.
+ 
+However, the 65 AMG trim was observed across more years, yielding a smoother scatterplot, whereas the 350 trim had a big gap in years, lending to a disjoint characteristic.
+
+Below, the scatterplot with both trims is shown.
+
+```{r echo=FALSE}
+
+
+#subset into 350 and 65 AMG trim
+sclass350 <- subset(sclass, trim == "350")
+sclass65 <- subset(sclass, trim == "65 AMG")
+
+# colors <- c("350 Trim" = "black"
+#            , "65 AMG Trim" = "red")
+
+
+# custom formatting function
+scaleFUN <- function(x) sprintf("%.f", x/1000)
+
+scale_dol_FUN <- function(x) sprintf("$%.f", x/1000)
+
+ggplot() +
+  labs(
+    title = "Price vs Mileage for 350 and 65 AMG Trims",
+    x = "Mileage",
+    y = "Price",
+    color = "Legend"
+  ) +
+  geom_point(data = sclass350, aes(x = mileage, y = price, color ="350"))+
+  geom_point(data = sclass65, aes(x = mileage, y = price, color = "65 AMG"))+
+  scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
+  scale_y_continuous(name = "Price (thousands of dollars)", labels = scale_dol_FUN)
+
+# scale_colour_manual(
+#   name = "Legend",
+#   values = colors
+# )
+```
+
+
+The 350 trim only has data on the years 1994, 1995, 2006, 2012, and 2013. Each year is concentrated in a particular section of the scatterplot, so it is likely that an observation's nearest neighbors would be close to it in time as well. Because of the huge gap in time between 1995 and 2006, there is a disjoint section for cars with mileage around 25,000.
+
+```{r echo = FALSE}
+ggplot(data=sclass350, aes(x=price, y=mileage)) +
+  geom_point() +
+  labs(title="Price vs Mileage for 350 Trim", x="Mileage", y="Price")+
+  scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
+  scale_y_continuous(name = "Price (thousands of dollars)", labels = scale_dol_FUN)
+  
+```
+
+Faceting by years for the 350 trim reveals that certain years have similar observations overall.
+
+```{r echo = FALSE}
+
+
+ggplot(data=sclass350, aes(x=price, y=mileage)) +
+  geom_point() +
+  labs(title="Price vs Mileage for 350 Trim", x="Mileage", y="Price")+
+  facet_wrap(~year) +
+  scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
+  scale_y_continuous(name = "Price(thousands of dollars)", labels= scale_dol_FUN)
+```
+
+
+In contrast, the 65 AMG trim, with much fewer total observations, has a smooth graph because the observations were gathered continuously for more years (2006 through 2013, and 2015).
+
+```{r echo = FALSE}
+# use the below command to see years in sclass65 dataframe
+# sort((unique(sclass65$year)))
+ggplot(data=sclass65, aes(x=price, y=mileage)) +
+  geom_point() +
+  labs(title="Price vs Mileage for 65 AMG Trim", x="Mileage", y="Price")+
+  scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
+  scale_y_continuous(name = "Price (thousands of dollars)", labels = scale_dol_FUN)
+```
+
+Faceting by year for the 65 AMG trim also reveals clusters of observations for each year.
+
+```{r echo = FALSE}
+ggplot(data=sclass65, aes(x=price, y=mileage)) +
+  geom_point() +
+  labs(title="Price vs Mileage Across Years for 65 AMG Trim", x="Mileage", y="Price") +
+  facet_wrap(~year)+
+  scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
+  scale_y_continuous(name = "Price (thousands of dollars)", labels = scale_dol_FUN)
+```
+
+
+We start with the 350 trim model and find the optimal K that minimizes the RMSE after iterating through many train-test splits. Then we compare the KNN model to linear regression models, one of which predicts price using mileage, and the other uses a polynomial of mileage predicting price. The red line is the RMSE for the linear regression model and the blue line is the second-degree polynomial.
+
+
+```{r echo=FALSE}
+# Train-test split for sclass 350
+N_350 = nrow(sclass350)
+N_350train = round(0.8*N_350)
+N_350test = N_350 - N_350train
+
+
+train_350ind = sample.int(N_350, N_350train, replace=FALSE)
+
+# Define the training and testing set
+D_350train = sclass350[train_350ind,]
+D_350test = sclass350[-train_350ind,]
+
+D_350test = arrange(D_350test, mileage)
+
+# Now separate the training and testing sets into features (X) and outcome (y)
+x_350train = data.frame(mileage=D_350train$mileage)
+y_350train = D_350train$price
+x_350test = data.frame(mileage=D_350test$mileage)
+y_350test = D_350test$price
+
+#linear and quadratic models
+lm1_350 = lm(price ~ mileage, data=D_350train)
+lm2_350 = lm(price ~ poly(mileage, 2), data=D_350train)
+
+#Define RMSE function
+rmse = function(actual, predicted) {
+  sqrt(mean((actual - predicted) ^ 2))
+}
+
+#find the best K for the 350 trim
+x350=dplyr::select(sclass350, mileage)
+y350=sclass350$price
+n350=length(y350)
+
+n350_train=round(0.8*n350)
+n350_test=n350-n350_train
+k_grid = seq(1, 50, by=1)
+rmse_grid_out350 = foreach(k = k_grid,  .combine='c') %do% {
+  out350 = do(5000)*{
+    train_ind = sample.int(n350, n350_train)
+    X_train350 = x350[train_ind,]
+    X_test350 = x350[-train_ind,]
+    y_train350 = y350[train_ind]
+    y_test350 = y350[-train_ind]
+    
+    knn_mod350 = FNN::knn.reg(as.data.frame(X_train350), as.data.frame(X_test350), y_train350, k=k)
+    
+    rmse(y_test350, knn_mod350$pred)
+  } 
+  mean(out350$result)
+}
+```
+
+
+```{r echo=FALSE}
+y_pred350_1 = predict(lm1_350, D_350test)
+lm1_350rmse = rmse(D_350test$price, y_pred350_1)
+y_pred350_2 = predict(lm2_350, D_350test)
+lm2_350rmse = rmse(D_350test$price, y_pred350_2)
+
+rmse_grid_out350 = data.frame(K = k_grid, RMSE = rmse_grid_out350)
+
+ind_best350 = which.min(rmse_grid_out350$RMSE)
+k_best350 = k_grid[ind_best350]
+
+g1 <- data.frame(k_best350, minrmse350=min(rmse_grid_out350$RMSE))
+
+p_out = ggplot(data=rmse_grid_out350) + 
+  geom_path(aes(x=K, y=RMSE), color="violet", size=1.5) + 
+  geom_hline(yintercept=lm2_350rmse, color='blue', size=1) +
+  geom_hline(yintercept=lm1_350rmse, color='red', size=1) +
+  geom_point(data=g1, aes(k_best350, y=minrmse350), color="black", size=3) +
+  geom_text(data=g1, aes(x=k_best350, y=minrmse350, label=k_best350), vjust=0.5, hjust=-0.5, size=4) +
+  labs(title="Root Mean Squared Error vs K for 350 Trim Regression and KNN Models", 
+       x="K", y="Root Mean Squared Error (RMSE)")
+
+p_out
+```
+
+
+```{r echo=FALSE}
+#fitting the KNN Model
+train_350ind = sort(sample.int(N_350, N_350train, replace=FALSE))
+D_350train = sclass350[train_ind,] 
+D_350train = arrange(D_350train, mileage)
+y_train350 = D_350train$price
+X_train350 = data.frame(mileage=jitter(D_350train$mileage))
+
+knn350 = FNN::knn.reg(X_train350, X_train350, y_train350, k = k_best350)
+
+subtitle350 = paste("Optimal K =", k_best350)
+D_350train$ypred = knn350$pred
+p_train = ggplot(data = D_350train) + 
+  geom_point(mapping = aes(x = mileage, y = price), color='lightgrey')
+p_train + geom_path(mapping = aes(x=mileage, y=ypred), color='red', size=1.5) +
+  labs(title="KNN model for 350 Trim", subtitle=subtitle350, x="Mileage", y="Price")
+
+```
+
+Repeat the procedure for the 65 AMG trim.
+<!-- Train-test split for sclass 65 -->
+
+```{r echo=FALSE}
+N_65 = nrow(sclass65)
+N_65train = floor(0.8*N_65)
+N_65test = N_65 - N_65train
+
+
+train_65ind = sample.int(N_65, N_65train, replace=FALSE)
+
+# Define the training and testing set
+D_65train = sclass65[train_65ind,]
+D_65test = sclass65[-train_65ind,]
+
+D_65test = arrange(D_65test, mileage)
+
+# Now separate the training and testing sets into features (X) and outcome (y)
+x_65train = data.frame(mileage=D_65train$mileage)
+y_65train = D_65train$price
+x_65test = data.frame(mileage=D_65test$mileage)
+y_65test = D_65test$price
+
+#linear and quadratic models
+lm1_65 = lm(price ~ mileage, data=D_65train)
+lm2_65 = lm(price ~ poly(mileage, 2), data=D_65train)
+
+# define RMSE function
+rmse = function(actual, predicted) {
+  sqrt(mean((actual - predicted) ^ 2))
+}
+
+# find best K for the 65 subset
+x65=dplyr::select(sclass65, mileage)
+y65=sclass65$price
+n65=length(y65)
+
+n65_train=round(0.8*n65)
+n65_test=n65-n65_train
+k_grid65 = seq(1, 50, by=1)
+rmse_grid_out65 = foreach(k = k_grid65,  .combine='c') %do% {
+  out65 = do(5000)*{
+    train_ind = sample.int(n65, n65_train)
+    X_train65 = x65[train_ind,]
+    X_test65 = x65[-train_ind,]
+    y_train65 = y65[train_ind]
+    y_test65 = y65[-train_ind]
+    
+    knn_mod65 = FNN::knn.reg(as.data.frame(X_train65), as.data.frame(X_test65), y_train65, k=k)
+    
+    rmse(y_test65, knn_mod65$pred)
+  } 
+  mean(out65$result)
+}
+
+y_pred65_1 = predict(lm1_65, D_65test)
+lm1_65rmse = rmse(D_65test$price, y_pred65_1)
+y_pred65_2 = predict(lm2_65, D_65test)
+lm2_65rmse = rmse(D_65test$price, y_pred65_2)
+
+rmse_grid_out65 = data.frame(K = k_grid65, RMSE = rmse_grid_out65)
+
+ind_best65 = which.min(rmse_grid_out65$RMSE)
+k_best65 = k_grid65[ind_best65]
+
+g2 <- data.frame(k_best65, minrmse65=min(rmse_grid_out65$RMSE))
+
+g_out = ggplot(data=rmse_grid_out65) + 
+  geom_path(aes(x=K, y=RMSE), color="violet", size=1.5) + 
+  geom_hline(yintercept=lm2_65rmse, color='blue', size=1) +
+  geom_hline(yintercept=lm1_65rmse, color='red', size=1) +
+  geom_point(data=g2, aes(k_best65, y=minrmse65), color="black", size=3) +
+  geom_text(data=g2, aes(x=k_best65, y=minrmse65, label=k_best65), vjust=0.5, hjust=-0.5, size=4) +
+  labs(title="RMSE vs K for 65 Trim Regression and KNN Models", 
+       x="K", y="Root Mean Squared Error (RMSE)")
+
+g_out
+```
+
+```{r echo=FALSE}
+#fitting the KNN Model
+train_65ind = sort(sample.int(N_65, N_65train, replace=FALSE))
+D_65train = sclass65[train_65ind,] 
+D_65train = arrange(D_65train, mileage)
+y_train65 = D_65train$price
+X_train65 = data.frame(mileage=jitter(D_65train$mileage))
+
+knn65 = FNN::knn.reg(X_train65, X_train65, y_train65, k = k_best65)
+
+subtitle65 = paste("Optimal K =", k_best65)
+D_65train$ypred = knn65$pred
+g_train = ggplot(data = D_65train) + 
+  geom_point(mapping = aes(x = mileage, y = price), color='lightgrey')
+g_train + geom_path(mapping = aes(x=mileage, y=ypred), color='red', size=1.5) +
+  labs(title="KNN Model for 65 AMG Trim", subtitle= subtitle65, x="Mileage", y="Price")
+```
+
+### Why do the optimal Ks differ for each trim?
+
+Looking at a summary of price for the two different trims, it is apparent that there is a tremendous difference in the price ranges for the two car sub-models.
+
+```{r echo=FALSE}
+
+sub65vs350 = sclass[sclass$trim %in% c("65 AMG", "350"),]
+
+plot.data <- rbind(sclass350, sclass65)
+ggplot(plot.data, aes(x = trim, y = price)) + geom_boxplot() + labs(title = "Significant Price Range Differences for Trims", x = "Trim", y = "Price")
+```
+
+
+```{r echo = FALSE}
+# favstats(~price, data=sclass350)%>% kable(caption = "Summary Statistics for 350 Trim") %>% kable_styling()
+```
+
+```{r echo=FALSE}
+# favstats(~price, data=sclass65) %>% kable(caption = "Summary Statistics for 65 AMG Trim") %>% kable_styling()
+
+```
+
+```{r echo = FALSE}
+ggplot(sclass350, aes(x=mileage))+ 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle("Distribution of 350 Trim")+
+  labs(x="Mileage", y="Density")
+```
+
+```{r echo = FALSE}
+ggplot(sclass65, aes(x=mileage))+ 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle("Distribution of 65 AMG Trim")+
+  labs(x="Mileage", y="Density")
+```
+
+## Conclusion
+It seems that the 65 AMG trim has a much wider range, so the best KNN model generalizes over that variation. In contrast, the 350 trim, although its mean is being pulled downwards from low values, is more normally distributed and has a tighter distribution. Also, there are fewer observations for the 65 AMG trim, so it is more prone to outliers. Thus, due to the noise and few points to average over, the model must be more flexible.
+
+Visually, if we compare the price of each trim to mileage in the initial graphs, the 65 AMG trim points are more spread out and have several points with mileage values between 200,000 and 250,000 with low or zero prices that could skew the results. Since the trend here is much less obvious, the model benefits from a higher K; more points are being averaged over and it results in a more "smoothed out" model. Conversely, the 350 trim (although it appears to have 2 or 3 separate sub-groupings with different slopes) has a more linear trend, so the K performs better when it is smaller and more granular.
+
+If we compare the RMSEs for both, the out-of-sample RMSE for the 65 trim model is almost twice that of the 350 model, so the model is worse for the 65 AMG trim, likely due to the variation as described above. The relatively higher K and RMSE values for the 65 AMG trim could suggest high bias; the model is oversimplifying and struggling to make a prediction. Another indication of this is that the regression models perform better for the 350 trim than for the 65 AMG trim; a second-degree polynomial does not perform much better than a linear line for the 350 trim, whereas the linear model has an extremely high error rate compared to the polynomial and the KNN model.
+
+
