@@ -50,14 +50,12 @@ X_test = model.matrix(~.- (url + is_weekend
 
 y_test = select(D_test, shares)
 
+
 # KNN 
 knn3 = knn.reg(train = X_train, 
                test = X_test, y = y_train, k=3)
 
 ypred_knn3 <- knn3$pred
-
-
-
 
 # Compare the models by RMSE
 
@@ -65,12 +63,10 @@ rmse = function(y, ypred) {
   sqrt(mean(data.matrix((y-ypred)^2)))
 }
 
-
 # Calculate the root mean square error
 rmse(y_test, ypred_knn3)
 
 #Let's try many values of K:
-
 N = nrow(arti)
 N_train = floor(0.8 * N)
 N_test = N - N_train
@@ -110,28 +106,23 @@ yhat_test_viral1 = ifelse(ypred_knn3 > 1400,1, 0)
 confusion_out = table(knn.pred = yhat_test_viral1, Actural = D_test$viral) 
 summary(confusion_out)
 confusion_out
-
 # Matrix
 colnames(confusion_out) <- c("Not Viral","Viral")
 rownames(confusion_out) <- c("Not Viral","Viral")
 confusion_out
 
-# 
-TP = confusion_out[2,2] / sum(confusion_out[,2])
+# Sensitivity (SN) is calculated as the number of correct positive predictions divided by the total number of positives.
+# SN = TP / (TP + FN)
+TPR = mean(confusion_out[2,2] / sum(confusion_out[,2]))
 TP
-TN = confusion_out[1,1] / sum(confusion_out[,1])
+
+# Specificity (SP) is calculated as the number of correct negative predictions divided by the total number of negatives. # SP = TNR = TN / (TN + FP)
+
+TNR = mean(confusion_out[1,1] / sum(confusion_out[,1]))
 TN
-# Overall Error Rate 
+# Overall Error Rate ERR = (FN + FP) 
 FN = confusion_out[1,2] / sum(confusion_out[,2])
 FP = confusion_out[2,1] / sum(confusion_out[,1])
-
-
-
-#null model
-null = lm(shares ~ 1, data=arti)
-
-
-
 
 
 
@@ -143,7 +134,6 @@ var(arti[,2])
 var(standardized.X[,2])
 
 y = arti$viral
-
 
 # Make a train - test split 
 N = nrow(arti)
@@ -175,7 +165,6 @@ knn_trainset = data.frame(X_train2, type = y_train2)
 knn3_testset = data.frame(X_test2, type = y_test2, 
                           type_pred = knn3_2)
 
-
 # Make a table of classification errors
 calc_class_err = function(actual, predicted) {
   mean(actual != predicted)
@@ -186,7 +175,6 @@ calc_class_err(actual = y_test2,
                                test  = X_test2,
                                   cl = y_train2,
                                   k = 100))
-
 
 # Find a good K
 k_to_try = 1:30
@@ -227,9 +215,9 @@ TN = confusion_out_2[1,1] / sum(confusion_out_2[,1])
 TN
 # Overall Error Rate 
 FN = confusion_out_2[1,2] / sum(confusion_out_2[,2])
-
+FN
 FP = confusion_out_2[2,1] / sum(confusion_out_2[,1])
-
+FP
 
 
 
