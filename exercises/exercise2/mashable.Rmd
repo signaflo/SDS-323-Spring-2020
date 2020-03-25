@@ -62,12 +62,12 @@ X_test = model.matrix( ~ n_tokens_title +
 
 y_test = dplyr::select(D_test, shares)
 
-# scale the training set features
-scale_factors = apply(X_train, 2, sd)
-X_train = scale(X_train, scale=scale_factors)
-
-# scale the test set features using the same scale factors
-X_test = scale(X_test, scale=scale_factors)
+# # scale the training set features
+# scale_factors = apply(X_train, 2, sd)
+# X_train = scale(X_train, scale=scale_factors)
+# 
+# # scale the test set features using the same scale factors
+# X_test = scale(X_test, scale=scale_factors)
 
 
 # KNN 
@@ -97,7 +97,7 @@ D_test$ypred_knn3 = ypred_knn3
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
 # first use the binary responses to get a confusion matrix of probabilities
-k_grid <- exp(seq(log(1), log(900), length=30)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(10000), length=30)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid
 ```
@@ -108,7 +108,7 @@ Iterating across a range of K to find the best out-of-sample accuracy rate, we f
 set.seed(1)
 confusion_valse = 
   foreach(k = k_grid,  .combine='c') %do% {
-  out = do(10)*{
+  out = do(1)*{
     # re-split into train and test cases with the same sample sizes
     train_ind = sample.int(N, N_train, replace=FALSE)
     
@@ -127,21 +127,25 @@ confusion_valse =
     
     y_train = dplyr::select(D_train, shares)
     
-    X_test = model.matrix(~  n_tokens_title + 
-                            num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-                            num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-                            data_channel_is_bus + data_channel_is_socmed +
-                            data_channel_is_tech + data_channel_is_world +
-                            self_reference_min_shares  + avg_negative_polarity - 1, data=D_test)
+    
+    X_test = model.matrix(
+      ~  n_tokens_title +
+        num_hrefs + num_self_hrefs + num_imgs + average_token_length +
+        num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
+        data_channel_is_bus + data_channel_is_socmed +
+        data_channel_is_tech + data_channel_is_world +
+        self_reference_min_shares  + avg_negative_polarity - 1,
+      data = D_test
+    )
     
     y_test = dplyr::select(D_test, shares)
     
     # scale the training set features
-    scale_factors = apply(X_train, 2, sd)
-    X_train = scale(X_train, scale=scale_factors)
-    
-    # scale the test set features using the same scale factors
-    X_test = scale(X_test, scale=scale_factors)
+    # scale_factors = apply(X_train, 2, sd)
+    # X_train = scale(X_train, scale=scale_factors)
+    # 
+    # # scale the test set features using the same scale factors
+    # X_test = scale(X_test, scale=scale_factors)
     
     # KNN 
     knn3 = knn.reg(train = X_train, 
@@ -169,7 +173,8 @@ confusion_valse
 mean(confusion_valse[[1]])
 
 max(confusion_valse)
-best_k = which(err_k == max(confusion_valse))
+# best_k = which(err_k == max(confusion_valse))
+best_k = k_grid[which(confusion_valse == max(confusion_valse))]
 best_k
 ## debug find the K associated with this!!! says lowest K but seems wrong.
 
@@ -190,7 +195,7 @@ plot(k_grid, confusion_valse)
 # Out of sample performance 
 set.seed(1)
 knn3 = knn.reg(train = X_train, 
-               test = X_test, y = y_train, k=24)  
+               test = X_test, y = y_train, k=4)  
 ## debug need to place best k above once correct
 ypred_knn3 <- knn3$pred
 
@@ -341,5 +346,4 @@ TP
 FP = confusion_out[1,2]/(confusion_out[1,1] + confusion_out[1,2])
 FP
 ```
-
 
