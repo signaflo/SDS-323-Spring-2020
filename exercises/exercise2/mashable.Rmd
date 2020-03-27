@@ -3,6 +3,7 @@ title: "SDS 323 Exercises 2"
 author: "Kyle Carter, Jacob Rachiele, Crystal Tse, Jinfang Yan"
 date: "3/13/2020"
 output: HTML_document
+# output: md_document
 ---
 
 ```{r setup, include = FALSE, message = FALSE, echo = FALSE}
@@ -25,6 +26,14 @@ arti = read.csv("online_news.csv")
 Mashable currently has about 49% of its articles go "viral," or get shared more than 1,400 times. Is there any way to improve this, or is it completely random?
 
 There are several factors that can be considered. These include, but are not limited to, the subject matter (e.g., "Entertainment", "World", "Tech"), day of publication, and polarity of the words in the article's content and title.
+ 
+A comprehensive overview of mean numeric data used in this analysis is summarized in the table below. The variable "url" was omitted for concision.
+
+```{r echo = FALSE}
+# head(arti) %>% kable() %>% kable_styling()
+# summarize_all(arti, list(~mean(.)))
+arti %>% summarize_if(is.numeric, mean)
+```
 
 ```{r echo = FALSE}
 arti <- arti %>% 
@@ -42,7 +51,7 @@ D_train = arti[train_ind,]
 D_test = arti[-train_ind,]
 
 D_test = arrange(D_test, n_tokens_content)
-head(D_test)
+# head(D_test)
 
 X_train = model.matrix( ~ n_tokens_title + 
                          num_hrefs + num_self_hrefs + num_imgs + average_token_length +
@@ -73,7 +82,7 @@ y_test = dplyr::select(D_test, shares)
 # KNN 
 knn3 = knn.reg(train = X_train, 
                test = X_test, y = y_train, k=3)
-names(knn3)
+# names(knn3)
 
 #####
 # Compare the models by RMSE_out
@@ -87,13 +96,17 @@ ypred_knn3 = knn3$pred
 
 # Calculate the root mean square error 
 # Compare predictions with test articles
-rmse(y_test, ypred_knn3)
+# rmse(y_test, ypred_knn3)
 
 
 #Plot the fit 
 
 D_test$ypred_knn3 = ypred_knn3
 
+```
+Below are the different values of K tested to find the optimal K for the out-of-sample accuracy.
+
+```{r echo = FALSE}
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
 # first use the binary responses to get a confusion matrix of probabilities
@@ -101,14 +114,13 @@ k_grid <- exp(seq(log(1), log(10000), length=30)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid
 ```
-Iterating across a range of K to find the best out-of-sample accuracy rate, we find that the best K value is when K = [ insert best K here ].
+Iterating across the above range of K to find the best out-of-sample accuracy rate, we find that the best K value is when K = 4. A potential reason for why averaging 4 points yields the best out-of-sample accuracy despite such a large dataset (almost 40,000 observations) is  
 ```{r echo = FALSE}
 # create a confusion matrix for multiple K values
-## debug FIXME need to find the optimal K!!!!!!!!!!!!!!!!
 set.seed(1)
 confusion_valse = 
   foreach(k = k_grid,  .combine='c') %do% {
-  out = do(1)*{
+  out = do(10)*{
     # re-split into train and test cases with the same sample sizes
     train_ind = sample.int(N, N_train, replace=FALSE)
     
@@ -176,7 +188,6 @@ max(confusion_valse)
 # best_k = which(err_k == max(confusion_valse))
 best_k = k_grid[which(confusion_valse == max(confusion_valse))]
 best_k
-## debug find the K associated with this!!! says lowest K but seems wrong.
 
 plot(k_grid, confusion_valse)
 
@@ -195,20 +206,19 @@ plot(k_grid, confusion_valse)
 # Out of sample performance 
 set.seed(1)
 knn3 = knn.reg(train = X_train, 
-               test = X_test, y = y_train, k=4)  
-## debug need to place best k above once correct
+               test = X_test, y = y_train, k=best_k)  
 ypred_knn3 <- knn3$pred
 
 
 yhat_test_viral1 = ifelse(ypred_knn3 > 1400,1, 0)
 confusion_out = table(knn.pred = yhat_test_viral1, Actual = D_test$viral) 
-summary(confusion_out)
-confusion_out
+# summary(confusion_out)
+# confusion_out
 
 # Matrix
 colnames(confusion_out) <- c("Not Viral","Viral")
 rownames(confusion_out) <- c("Not Viral","Viral")
-confusion_out
+confusion_out %>% kable() %>% kable_styling()
 
 sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
 
@@ -221,14 +231,14 @@ TP
 FP = confusion_out[1,2]/(confusion_out[1,1] + confusion_out[1,2])
 FP
 
-
 # null model, always predicts "not viral"
 lm_lame = lm(!viral ~ 1, data = arti)
 
 # do the TP for null
 coef(lm_lame)
-# do the FP for null
+# do false negative
 ## debug
+# nonviral in real?
 ```
 
 Approaching the problem from where the dependent variable is a binary, or dummy, variable, rather than a numerical variable, yields different results. More specifically, _______________________________________________.
@@ -334,7 +344,7 @@ colnames(confusion_out_2) <- c("Not Viral","Viral")
 rownames(confusion_out_2) <- c("Not Viral","Viral")
 confusion_out_2
 
-# Out of sample accuracy (True Positive)
+# Out of sample accuracy
 sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
 
 # overall error rate
