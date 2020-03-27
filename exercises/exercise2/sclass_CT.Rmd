@@ -337,7 +337,7 @@ ggplot(plot.data, aes(x = trim, y = price)) + geom_boxplot() + labs(title = "Sig
 
 ```{r echo = FALSE}
 ggplot(sclass350, aes(x=mileage))+ 
-  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
   geom_density(alpha=.2, fill="#FF6666") +
   ggtitle("Distribution of 350 Trim")+
   labs(x="Mileage", y="Density")
@@ -345,7 +345,7 @@ ggplot(sclass350, aes(x=mileage))+
 
 ```{r echo = FALSE}
 ggplot(sclass65, aes(x=mileage))+ 
-  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
   geom_density(alpha=.2, fill="#FF6666") +
   ggtitle("Distribution of 65 AMG Trim")+
   labs(x="Mileage", y="Density")
