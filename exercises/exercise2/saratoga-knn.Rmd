@@ -1,0 +1,177 @@
+---
+title: "saratoga-knn.Rmd"
+author: "Jacob Rachiele"
+date: "3/25/2020"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+## Saratoga House Prices
+
+### Question
+
+#### What is the best price-modeling strategy for predicting property market value?
+
+### Data
+
+The data set used to answer this question includes the prices of 1,728 houses in 
+Saratoga County, New York in the year 2006. In addition to price, the data set includes
+15 other attributes for each house --- 9 quantitative, including house age, living area,
+and number of bedrooms, and 6 categorical, including whether the house has central air
+conditioning, is a new construction, the type of heating system, and the type of fuel
+used for that heating system.
+
+### Methods
+
+Two methods are used to analyze the data and form predicted house prices. The first was
+linear regression, which assumes that house price is a linear function of the predictive
+attributes, and the second is K-nearest-neighbors regression, which makes no assumptions
+about the form of the function used to predict prices.
+
+Instead, it predicts the price of a house based on the prices of other houses that are most
+similar to the one being considered, where similarity is measured by how close the values
+of the predictor attributes are to the house being considered. For example, if square
+footage was the only predictor attribute and the house whose price we want to predict was
+3,000 square feet, then we would find the average price of the K houses that are closest to
+being 3,000 square feet and use that as our prediction.
+
+80% of the houses were selected at random to train each model. The remaining 20% of the
+houses were used to test the predictive performance of each model, measured by the root
+mean squared error (RMSE) obtained my comparing each model's predicted prices with the actual prices contained in the test set.
+
+The attributes used as predictors of housing prices were determined first by examining the
+correlation structure of the data, by visual examination of the relationships among
+the predictors and prices, and ultimately by the ability of each potential predictor to reduce the RMSE of the predictions.
+
+The attributes that were used to predict housing prices are given in Table 1
+
+__Table 1__
+
+| Attribute | Description |
+| --------- | ----------- |
+
+
+### Results
+
+The best performing K-nearest-neighbors model had K = ...
+
+However, the linear regression model
+
+### Discussion
+
+For the most accurate predictions of house prices in Saratoga, New York, use the flexible
+linear model that 
+
+```{r include = FALSE}
+set.seed(550)
+# Load required libraries and define rmse function.
+library(tidyverse)
+library(mosaic)
+library(splines)
+library(FNN)
+library(foreach)
+data(SaratogaHouses)
+
+rmse <- function(y, yhat) {
+  sqrt(mean((y - yhat)^2))
+}
+
+# Simple wrapper function to test for features that aren't factors.
+not.factor <- function(x) !is.factor(x)
+
+# Show the correlation matrix to get an idea of price effects and interactions.
+cor(select_if(SaratogaHouses, not.factor))
+```
+
+#Replace correlation matrix above with Correlogram.
+
+```{r}
+n <- nrow(SaratogaHouses)
+n_train <- round(0.8*n)  # round to nearest integer
+n_test <- n - n_train
+
+rmse_vals <- do(250) * {
+  train_cases <- sample.int(n, n_train, replace=FALSE)
+  test_cases <- setdiff(1:n, train_cases)
+  saratoga_train <- SaratogaHouses[train_cases,]
+  saratoga_test <- SaratogaHouses[test_cases,]
+  
+  model <- lm(price ~  livingArea * centralAir +
+                livingArea * bathrooms +
+                livingArea * bedrooms +
+                waterfront + newConstruction +
+                bs(age, df = 7) + bs(pctCollege, df = 7),
+              data = saratoga_train)
+  
+  yhat_test <- predict(model, saratoga_test)
+  
+  rmse(saratoga_test$price, yhat_test)
+  
+}
+
+mean(rmse_vals$result)
+
+
+k_grid <- exp(seq(log(2), log(300), length=100)) %>% round %>% unique
+
+rmse_grid <- foreach(K = k_grid, .combine='c') %do% {
+  out <- do(100) * {
+    
+    train_cases <- sample.int(n, n_train, replace=FALSE)
+    test_cases <- setdiff(1:n, train_cases)
+    saratoga_train <- SaratogaHouses[train_cases,]
+    saratoga_test <- SaratogaHouses[test_cases,]
+    
+    training_features <- model.matrix(~ livingArea + centralAir +
+                                        bathrooms + bedrooms +
+                                        waterfront + newConstruction +
+                                        pctCollege + age - 1,
+                                      data = saratoga_train)
+    test_features <- model.matrix(~ livingArea + centralAir +
+                                    bathrooms + bedrooms +
+                                    waterfront + newConstruction +
+                                    pctCollege + age - 1,
+                                  data = saratoga_test)
+    
+    training_response <- saratoga_train$price
+    test_response <- saratoga_test$price
+    
+    training_scale <- apply(training_features, 2, sd)
+    
+    training_features <- scale(training_features, scale = training_scale)
+    test_features <- scale(test_features, scale = training_scale)
+    
+    knn_model <- knn.reg(training_features, test_features, training_response, k = K)
+    rmse(test_response, knn_model$pred)
+  }
+  mean(out$result)
+}
+
+df <- data.frame(k = k_grid, rmse = rmse_grid, lm_rmse = mean(rmse_vals$result))
+ggplot(data = df) +
+  geom_line(aes(x = k, y = rmse), color = 'red') +
+  geom_line(aes(x = k, y = lm_rmse), color = 'blue')
+```
+
+
+```{r}
+ggplot(data = SaratogaHouses) +
+  geom_point(aes(x = livingArea, y = price, color = centralAir))
+ggplot(data = SaratogaHouses) +
+  geom_boxplot(aes(x = fuel, y = price))
+
+ggplot(data = SaratogaHouses, aes(waterfront, price, color = centralAir)) +
+  geom_boxplot()
+
+age_model <- lm(price ~ bs(age, df = 7), data = SaratogaHouses)
+p <- ggplot(data = SaratogaHouses)
+p + geom_point(aes(x = age, y = price), color = "gray", alpha = 0.5) +
+  geom_line(aes(age, age_model$fitted.values), color = "red", alpha = 0.75, size = 0.5)
+
+college_model <- lm(price ~ bs(pctCollege, df = 7), data = SaratogaHouses)
+p + geom_point(aes(x = pctCollege, y = price), color = "gray", alpha = 0.5) +
+  geom_line(aes(pctCollege, college_model$fitted.values), color = "red", alpha = 0.75, size = 0.5)
+```
