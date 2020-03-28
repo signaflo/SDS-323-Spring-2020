@@ -2,7 +2,7 @@
 title: "saratoga-knn.Rmd"
 author: "Jacob Rachiele"
 date: "3/25/2020"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
@@ -112,8 +112,7 @@ rmse_vals <- do(250) * {
 
 mean(rmse_vals$result)
 
-
-k_grid <- exp(seq(log(2), log(300), length=100)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(100), length=33)) %>% round %>% unique
 
 rmse_grid <- foreach(K = k_grid, .combine='c') %do% {
   out <- do(100) * {
@@ -148,23 +147,43 @@ rmse_grid <- foreach(K = k_grid, .combine='c') %do% {
   mean(out$result)
 }
 
-results <- data.frame(k = k_grid, rmse = rmse_grid, lm_rmse = mean(rmse_vals$result))
-best_k_index <- which.min(results$rmse)
-best_k <- results$k[best_k_index]
-best_rmse <- results$rmse[best_k_index]
+lm_rmse <- mean(rmse_vals$result) %>% round
+rmse_results <- data.frame(k = k_grid, k_rmse = rmse_grid, lm_rmse = lm_rmse)
+best_k_index <- which.min(rmse_results$k_rmse)
+best_k <- rmse_results$k[best_k_index]
+best_rmse <- rmse_results$k_rmse[best_k_index] %>% round
 ```
 
 The best performing K-nearest-neighbors model was at K = `r best_k` which had a prediction
 RMSE of `r best_rmse`.
 
 On the other hand, the linear regression model achieved a far superior prediction RMSE of 
-`r results$lm_rmse[1]`.
+`r lm_rmse`.
 
 Figure 1 displays prediction RMSE against increasing values of K. The RMSE for 
 K-nearest-neighbors is displayed in red. The RMSE of the linear regression model is 
 the blue horizontal line.
 
-[Figure 1 here]
+```{r}
+best_k_point <- data.frame(best_k = best_k, best_rmse = best_rmse)
+rmse_subtitle <- "RMSE for KNN and Linear Regression Models"
+lm_text <- "RMSE for linear regression model"
+best_k_label <- paste("K =", best_k)
+
+rmse_plot <- ggplot(data = rmse_results)
+rmse_plot + geom_path(aes(x = k, y = k_rmse), color = "red", size = 0.75, alpha = 0.5) +
+  geom_hline(yintercept = lm_rmse, color = "blue", size = 0.75, alpha = 0.5) +
+  ggtitle("Figure 1", subtitle = rmse_subtitle) +
+  xlab("K") +
+  ylab("RMSE (Root Mean Squared Error)") +
+  geom_point(data = best_k_point, aes(x = best_k, y = best_rmse),
+             color = "black", alpha = 0.75, size = 2) +
+  geom_text(data = best_k_point, aes(x = best_k, y = best_rmse, label = best_k_label),
+            vjust = 1, hjust = -0.25, size = 3.5) +
+  geom_text(data = rmse_results, aes(x = floor(max(k) / 2), y = lm_rmse,
+            label = lm_text), vjust = -1, size = 4)
+  
+```
 
 The greater predictive accuracy of the linear regresson model is the result of using the
 right set of predictor attributes, modeling the interactions among those predictors, and
@@ -175,10 +194,27 @@ to each interval separately.
 In particular, using age and percent of college graduates as simple predictors doesn't 
 give the linear model much improvement in predictive power. However, using the cubic spline
 mentioned above results in a dramatic improvement. Figures 2 and 3 below show the result
-of fitting a cubic spline separately for both 
+of fitting a cubic spline separately for both.
 
-[Figure 2]
-[Figure 3]
+```{r}
+age_model <- lm(price ~ bs(age, df = 7), data = SaratogaHouses)
+age_subtitle <- "price vs age fitted with cubic spline"
+xlabel <- "age of house (in years)"
+p <- ggplot(data = SaratogaHouses)
+p + geom_point(aes(x = age, y = price), color = "gray", alpha = 0.5) +
+  geom_line(aes(age, age_model$fitted.values), color = "red", alpha = 0.75, size = 0.5) +
+  ggtitle("Figure 2", subtitle = age_subtitle) +
+  xlab(xlabel)
+
+college_model <- lm(price ~ bs(pctCollege, df = 7), data = SaratogaHouses)
+college_subtitle <- "price vs percent college graduates fitted with cubic spline"
+xlabel <- "percentage of college graduates in neighborhood"
+p +  geom_point(aes(x = pctCollege, y = price), color = "gray", alpha = 0.5) +
+  geom_line(aes(pctCollege, college_model$fitted.values), 
+            color = "red", alpha = 0.75, size= 0.5) +
+  ggtitle("Figure 3", subtitle = college_subtitle) +
+  xlab(xlabel)
+```
 
 Including interactions in the linear regression model provides a way to incorporate the
 effect that one predictor variable has on another predictor variable into the model.
@@ -192,14 +228,29 @@ central air conditioning may have a substantial effect on the house price. Consi
 the joint effect of living area with both the number of bedrooms and the number of
 bathrooms also boosts the predictive accuracy of the model.
 
-[Figure 4]
+```{r}
+fig4_subtitle <- "price vs living area and central air conditioning"
+p + geom_point(aes(x = livingArea, y = price, color = centralAir)) +
+  ggtitle("Figure 4", subtitle = fig4_subtitle) +
+  xlab("living area") +
+  labs(color = "Central Air Conditioning")
+```
 
 Finally, as might be expected, including indicators for whether a house is a waterfront
 property or is newly constructed also improves prediction accuracy. Figures 5 and 6 show
 the relationship between each of those attributes and house prices.
 
-[Figure 5]
-[Figure 6]
+```{r}
+waterfront_subtitle <- "price distribution by whether house is on waterfront"
+  p + geom_boxplot(aes(x = waterfront, y = price)) +
+    ggtitle("Figure 5", subtitle = waterfront_subtitle) +
+    xlab("is house a waterfront property?")
+
+new_construction_subtitle <- "price distribution by whether house was newly constructed"
+  p + geom_boxplot(aes(x = newConstruction, y = price)) +
+    ggtitle("Figure 6", subtitle = new_construction_subtitle) +
+    xlab("was house newly constructed?")
+```
 
 ### Conclusion
 
@@ -213,7 +264,7 @@ assume that a linear function can adequately model the response.
 However, linear regression has two big advantages. One, it can be made substantially more
 flexible by extending it with nonlinear techniques such as the cubic splines used on age
 and percent of college graduates. Two, the interactions, i.e., context-specific effects
-between variables can be made clear and explicit. Using linear regression gives us a 
+between variables can be made clear and explicit. Using linear regression gives a 
 precise way to model how central air conditioning's effect on house price depends on
 the living area of the house.
 
@@ -224,7 +275,7 @@ regression model signficantally outperformed K-nearest-neighbors and therefore i
 recommended approach for predicting house prices to help determine tax rates in Saratoga
 County.
 
-Specifically, the Saratgo County tax authority should predict prices using a linear
+Specifically, the Saratoga County tax authority should predict prices using a linear
 regression model using the following approach.
  1. Include living area and consider it the most important determinant of house price.
  2. Consider central air conditioning, the number of bedrooms, the number of bathrooms,
@@ -239,21 +290,3 @@ regression model using the following approach.
  By following the approach outlined above the Saratoga County tax authority will obtain
  very accurate predictions for house prices and be able to confidentally determine the
  appropriate taxing strategy.
-
-```{r}
-ggplot(data = SaratogaHouses) +
-  geom_point(aes(x = livingArea, y = price, color = centralAir))
-ggplot(data = SaratogaHouses) +
-  geom_boxplot(aes(x = waterfront, y = price))
-ggplot(data = SaratogaHouses) +
-  geom_boxplot(aes(x = newConstruction, y = price))
-
-age_model <- lm(price ~ bs(age, df = 7), data = SaratogaHouses)
-p <- ggplot(data = SaratogaHouses)
-p + geom_point(aes(x = age, y = price), color = "gray", alpha = 0.5) +
-  geom_line(aes(age, age_model$fitted.values), color = "red", alpha = 0.75, size = 0.5)
-
-college_model <- lm(price ~ bs(pctCollege, df = 7), data = SaratogaHouses)
-p + geom_point(aes(x = pctCollege, y = price), color = "gray", alpha = 0.5) +
-  geom_line(aes(pctCollege, college_model$fitted.values), color = "red", alpha = 0.75, size = 0.5)
-```
