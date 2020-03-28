@@ -34,7 +34,10 @@ A comprehensive overview of mean numeric data used in this analysis is summarize
 # summarize_all(arti, list(~mean(.)))
 arti %>% summarize_if(is.numeric, mean)
 ```
+# KNN Regression Approach
+We fit a linear regression model to predict the number of times an article was shared using several variables, including the number of words in the title, number of links (in general and to other Mashable articles), subject matter, and average negative polarity of the article. These variables were selected based upon their statistical significance in a regression with all of the variables in the dataset used to predict number of shares.
 
+On a more intuitive level, ___________________.
 ```{r echo = FALSE}
 arti <- arti %>% 
   mutate(viral = ifelse(shares > 1400, 1, 0))
@@ -96,7 +99,7 @@ ypred_knn3 = knn3$pred
 
 # Calculate the root mean square error 
 # Compare predictions with test articles
-# rmse(y_test, ypred_knn3)
+rmse(y_test, ypred_knn3)
 
 
 #Plot the fit 
@@ -168,16 +171,8 @@ confusion_valse =
     viral_prediction = ifelse(ypred_knn3 > 1400, 1, 0)
     confusion_out = table(y = D_test$viral, yhat = viral_prediction)
     # confusion_out
-    
     sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
     
-    # # overall error rate
-    # 1 - sum(diag(confusion_out))/sum(confusion_out)
-    # # true positive rate
-    # confusion_out[2,2]/(confusion_out[2, 1] + confusion_out[2,2])
-    # # false positive rate 
-    # confusion_out[1,2]/(confusion_out[1,1] + confusion_out[1,2])
-    # #across multiple train/test splits!!!!!
   }
   mean(out$result)
 }
@@ -191,8 +186,6 @@ best_k
 
 plot(k_grid, confusion_valse)
 
-# got 0.500454  (do 20x), as opposed to guessing "not viral" which got 0.5065584
-# 0.5056123 with K = 1 through 300 by 2
 # aim for 0.53 (another group at office hours)
 # 0.54732 average with k_grid <- exp(seq(log(1), log(500), length=35)) %>% round %>% unique
 #   and out = do * 10
@@ -202,8 +195,6 @@ plot(k_grid, confusion_valse)
 
 
 ```{r echo = FALSE}
-# Aubrey's version of above^^
-# Out of sample performance 
 set.seed(1)
 knn3 = knn.reg(train = X_train, 
                test = X_test, y = y_train, k=best_k)  
@@ -213,7 +204,7 @@ ypred_knn3 <- knn3$pred
 yhat_test_viral1 = ifelse(ypred_knn3 > 1400,1, 0)
 confusion_out = table(knn.pred = yhat_test_viral1, Actual = D_test$viral) 
 # summary(confusion_out)
-# confusion_out
+confusion_out
 
 # Matrix
 colnames(confusion_out) <- c("Not Viral","Viral")
@@ -224,12 +215,20 @@ sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
 
 # overall error rate
 1 - sum(diag(confusion_out))/sum(confusion_out)
-# true positive rate
-TP = confusion_out[2,2]/(confusion_out[2, 1] + confusion_out[2,2])
+TP = confusion_out[2,2] / sum(confusion_out[,2])
 TP
-# false positive rate
-FP = confusion_out[1,2]/(confusion_out[1,1] + confusion_out[1,2])
+
+# The true negative rate is --%, which means --% percentage of Nonviral that are correctly identified.
+TN = confusion_out[1,1] / sum(confusion_out[,1])
+TN
+
+# There are --% of Viral incorrectly identified as Nonviral 
+FP = confusion_out[2,1] / sum(confusion_out[,1])
 FP
+
+# There are --% of NonViral incorrectly identified as Viral 
+FN = confusion_out[1,2] / sum(confusion_out[,2])
+FN
 
 # null model, always predicts "not viral"
 lm_lame = lm(!viral ~ 1, data = arti)
@@ -240,14 +239,12 @@ coef(lm_lame)
 ## debug
 # nonviral in real?
 ```
+# KNN Classification Approach
 
-Approaching the problem from where the dependent variable is a binary, or dummy, variable, rather than a numerical variable, yields different results. More specifically, _______________________________________________.
+Approaching the problem from where the dependent variable is a binary, or dummy, variable, rather than a numerical variable, yields different results. The dummy variable "Viral" is 1 when the number of shares is greater than 1400. 
 
 ```{r echo = FALSE}
-############################
-
-
-# We defined a new dummy variable Viral. Viral is 1 when the shares are greater than 1400. 
+############################ 
 
 standardized.X = scale(arti[, -1])
 var(arti[,2])
@@ -291,6 +288,7 @@ knn3_testset = data.frame(X_test2, type = y_test2,
 calc_class_err = function(actual, predicted) {
   mean(actual != predicted)
 }
+
 calc_class_err(actual = y_test2,
                predicted = knn(train = X_train2,
                                test  = X_test2,
@@ -298,32 +296,50 @@ calc_class_err(actual = y_test2,
                                k = 100))
 
 set.seed(1)
-k_to_try = 1:30
-err_k = rep(x = 0, times = length(k_to_try))
-for (i in seq_along(k_to_try)) {
-  pred = knn(train = scale(X_train2), 
-             test  = scale(X_test2), 
-             cl    = y_train2, 
-             k     = k_to_try[i])
+# k_to_try = 1:30
+# err_k = rep(x = 0, times = length(k_to_try))
+# for (i in seq_along(k_to_try)) {
+#   pred = knn(train = scale(X_train2),
+#              test  = scale(X_test2),
+#              cl    = y_train2,
+#              k     = k_to_try[i])
+#   err_k[i] = calc_class_err(y_test2, pred)
+# }
+
+err_k = rep(x = 0, times = length(k_grid))
+for (i in seq_along(k_grid)) {
+  pred = knn(train = scale(X_train2),
+             test  = scale(X_test2),
+             cl    = y_train2,
+             k     = k_grid[i])
   err_k[i] = calc_class_err(y_test2, pred)
 }
 
+```
 
-# This chart shows the relationship between the value of K and classification error. This chart helps us to find k = 28 has the smallest classification error 38%.    
+The following chart shows the relationship between the value of K and classification error. This chart helps us to find the optimal k = 28 has the smallest classification error of 38%.
 
+## debug get rid of hard coded numbers
+```{r echo = FALSE}
 plot(err_k, type = "b", col = "dodgerblue", cex = 1, pch = 20, 
      xlab = "k, number of neighbors", ylab = "classification error",
      main = "(Test) Error Rate vs Neighbors")
 min(err_k)
 which(err_k == min(err_k))
 table(y_test2)
-# There is an average of 49% of Viral and 51% Nonviral in the test set.
+```
+There is an average of 49% of Viral and 51% Nonviral in the test set.
+```{r echo = FALSE}
 mean(y_test2 == "1")
 mean(y_test2 == "0")
-
+```
+Below, the confusion matrix for the KNN classification method is displayed.
+```{r echo = FALSE}
 confusion_out_2 = table(knn.pred = knn3_2, Actu = D_test2$viral) 
 confusion_out_2
+```
 
+```{r echo = FALSE}
 # 2067 number of Viral in real which is Viral in predicted. 
 # 2336 number of Nonviral in real which is Nonviral in predicted. 
 # 1654 number of Nonviral in real which is Viral in predicted. 
@@ -331,18 +347,19 @@ confusion_out_2
 colnames(confusion_out_2) <- c("Not Viral","Viral")
 rownames(confusion_out_2) <- c("Not Viral","Viral")
 confusion_out_2
-
+```
+The out-of-sample accuracy is shown below.
+```{r echo = FALSE}
 # 56% of the observations are correctly predicted by using this model. 
-ACC = (2280 + 2162) / sum(confusion_out)
-
+sum(diag(confusion_out_2))/sum(confusion_out_2) # out-of-sample accuracy
 
 # Overall error rate is 44%
-1 - (2280 + 2162) / sum(confusion_out)
-
+1 - sum(diag(confusion_out_2))/sum(confusion_out_2)
 
 # The true positive rate is 54%, which means 54% percentage of Viral that are correctly identified.
 TP = confusion_out_2[2,2] / sum(confusion_out_2[,2])
 TP
+
 # The true negative rate is 56%, which means 56% percentage of Nonviral that are correctly identified.
 TN = confusion_out_2[1,1] / sum(confusion_out_2[,1])
 TN
@@ -350,10 +367,10 @@ TN
 # There are 43% of Viral incorrectly identified as Nonviral 
 FP = confusion_out_2[2,1] / sum(confusion_out_2[,1])
 FP
+
 # There are 45% of NonViral incorrectly identified as Viral 
 FN = confusion_out_2[1,2] / sum(confusion_out_2[,2])
 FN
 
 ```
-
 
