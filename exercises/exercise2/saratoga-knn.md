@@ -162,12 +162,12 @@ can adequately model the response.
 However, linear regression has two big advantages. One, it can be made
 substantially more flexible by extending it with nonlinear techniques
 such as the cubic splines used on age and percent of college graduates.
-Two, the interactions, i.e., context-specific effects between variables
-can be made clear and explicit. Using linear regression gives a precise
-way to model how central air conditioning’s effect on house price
-depends on the living area of the house.
+Two, the interactions, i.e., context-specific effects between variables,
+can be made clear and explicit. For example, linear regression gives a
+precise way to model how central air conditioning’s effect on house
+price depends on the living area of the house.
 
-With all that said, if K-nearest-neighbors had outperformed linear
+With that said, if K-nearest-neighbors had outperformed linear
 regression in terms of predictive accuracy, then that would be the
 recommended approach for determining house prices and setting tax rates.
 But that was not the case here. In fact, the linear regression model
