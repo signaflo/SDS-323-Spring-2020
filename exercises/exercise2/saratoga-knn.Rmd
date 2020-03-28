@@ -2,7 +2,7 @@
 title: "saratoga-knn.Rmd"
 author: "Jacob Rachiele"
 date: "3/25/2020"
-output: md_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -42,31 +42,29 @@ being 3,000 square feet and use that as our prediction.
 houses were used to test the predictive performance of each model, measured by the root
 mean squared error (RMSE) obtained my comparing each model's predicted prices with the actual prices contained in the test set.
 
-The attributes used as predictors of housing prices were determined first by examining the
+#### Attribute Selection
+
+The attributes used as predictors of housing prices were determined by examining the
 correlation structure of the data, by visual examination of the relationships among
 the predictors and prices, and ultimately by the ability of each potential predictor to reduce the RMSE of the predictions.
 
 The attributes that were used to predict housing prices are given in Table 1
 
 __Table 1__
-
-| Attribute | Description |
-| --------- | ----------- |
-
+| Attribute        | Description                                            |
+| ---------        | --------------------------------------                 |
+| living area      | living area in square feet                             |
+| bedrooms         | The number of bedrooms in the house                    |
+| bathrooms        | The number of bathrooms in the house                   |
+| central air      | whether the house includes central air conditioning    |
+| age              | The age of the house in years                          |
+| percent college  | The percent of the neighborhood that graduated college |
+| waterfront       | Whether the house is a waterfront property             |
+| new construction | Whether the house was newly constructed                |
 
 ### Results
 
-The best performing K-nearest-neighbors model had K = ...
-
-However, the linear regression model
-
-### Discussion
-
-For the most accurate predictions of house prices in Saratoga, New York, use the flexible
-linear model that 
-
 ```{r include = FALSE}
-set.seed(550)
 # Load required libraries and define rmse function.
 library(tidyverse)
 library(mosaic)
@@ -80,26 +78,26 @@ rmse <- function(y, yhat) {
 }
 
 # Simple wrapper function to test for features that aren't factors.
-not.factor <- function(x) !is.factor(x)
+# not.factor <- function(x) !is.factor(x)
 
 # Show the correlation matrix to get an idea of price effects and interactions.
-cor(select_if(SaratogaHouses, not.factor))
+# cor(select_if(SaratogaHouses, not.factor))
 ```
-
-#Replace correlation matrix above with Correlogram.
 
 ```{r}
 n <- nrow(SaratogaHouses)
 n_train <- round(0.8*n)  # round to nearest integer
 n_test <- n - n_train
 
+set.seed(550)
 rmse_vals <- do(250) * {
   train_cases <- sample.int(n, n_train, replace=FALSE)
   test_cases <- setdiff(1:n, train_cases)
   saratoga_train <- SaratogaHouses[train_cases,]
   saratoga_test <- SaratogaHouses[test_cases,]
   
-  model <- lm(price ~  livingArea * centralAir +
+  model <- lm(price ~
+                livingArea * centralAir +
                 livingArea * bathrooms +
                 livingArea * bedrooms +
                 waterfront + newConstruction +
@@ -150,21 +148,61 @@ rmse_grid <- foreach(K = k_grid, .combine='c') %do% {
   mean(out$result)
 }
 
-df <- data.frame(k = k_grid, rmse = rmse_grid, lm_rmse = mean(rmse_vals$result))
-ggplot(data = df) +
-  geom_line(aes(x = k, y = rmse), color = 'red') +
-  geom_line(aes(x = k, y = lm_rmse), color = 'blue')
+results <- data.frame(k = k_grid, rmse = rmse_grid, lm_rmse = mean(rmse_vals$result))
+best_k_index <- which.min(results$rmse)
+best_k <- results$k[best_k_index]
+best_rmse <- results$rmse[best_k_index]
 ```
 
+The best performing K-nearest-neighbors model was at K = `r best_k` which had a prediction
+RMSE of `r best_rmse`.
+
+On the other hand, the linear regression model achieved a far superior prediction RMSE of 
+`r results$lm_rmse[1]`.
+
+The greater predictive accuracy of the linear regresson model is the result of using the
+right set of predictor attributes, modeling the interactions among those predictors, and
+adding flexibility to the model through the use of the cubic spline, which divides the
+range of the predictor variable into distinct intervals and fits a cubic polynomial curve
+to each interval separately.
+
+In particular, using age and percent of college graduates as simple predictors doesn't 
+give the linear model much improvement in predictive power. However, using the cubic spline
+mentioned above results in a dramatic improvement.
+
+Including interactions in the linear regression model provides a way to incorporate the
+effect that one predictor variable has on another predictor variable into the model.
+For example, living area is a powerful predictor of housing prices considered alone.
+But by also considering the effect that living area has on prices in the context of the
+values of other predictor variables, more accurate modeling and hence predictions are made.
+
+For example, the following plot shows not only that larger living areas are associated
+with higher house prices, but that, for houses with similar living areas, the presence of
+central air conditioning may have a substantial effect on the house price. Considering
+the joint effect of living area with both the number of bedrooms and the number of
+bathrooms also boosts the predictive accuracy of the model.
+
+Finally, as might be expected, including indicators for whether a house is a waterfront
+property or is newly constructed also improves prediction accuracy.
+
+### Conclusion
+
+The price of a house depends on many factors and relationships among those factors. Therefore a flexible modeling approach is necessary to give the most accurate predictions.
+
+K-nearest-neighbors is considered a more flexible modeling strategy than linear
+regression since it makes no assumptions about the underlying form of the relationship
+between the response variable and the predictor variables, while linear regression does 
+assume that a linear function can adequately model the response.
+
+However, linear 
 
 ```{r}
 ggplot(data = SaratogaHouses) +
   geom_point(aes(x = livingArea, y = price, color = centralAir))
 ggplot(data = SaratogaHouses) +
-  geom_boxplot(aes(x = fuel, y = price))
-
-ggplot(data = SaratogaHouses, aes(waterfront, price, color = centralAir)) +
-  geom_boxplot()
+  geom_boxplot(aes(x = waterfront, y = price))
+ggplot(data = SaratogaHouses) +
+  geom_boxplot(aes(x = newConstruction, y = price))
 
 age_model <- lm(price ~ bs(age, df = 7), data = SaratogaHouses)
 p <- ggplot(data = SaratogaHouses)
