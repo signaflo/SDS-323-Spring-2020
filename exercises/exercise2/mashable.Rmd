@@ -32,7 +32,7 @@ A comprehensive overview of mean numeric data used in this analysis is summarize
 ```{r echo = FALSE}
 # head(arti) %>% kable() %>% kable_styling()
 # summarize_all(arti, list(~mean(.)))
-arti %>% summarize_if(is.numeric, mean)
+arti %>% summarize_if(is.numeric, mean)%>% round(3)%>% kable() %>% kable_styling()
 ```
 # KNN Regression Approach
 We fit a linear regression model to predict the number of times an article was shared using several variables, including the number of words in the title, number of links (in general and to other Mashable articles), subject matter, and average negative polarity of the article. These variables were selected based upon their statistical significance in a regression with all of the variables in the dataset used to predict number of shares.
@@ -94,12 +94,11 @@ rmse = function(y, ypred) {
   sqrt(mean(data.matrix((y-ypred)^2)))
 }
 
-
 ypred_knn3 = knn3$pred
 
 # Calculate the root mean square error 
 # Compare predictions with test articles
-rmse(y_test, ypred_knn3)
+# rmse(y_test, ypred_knn3)
 
 
 #Plot the fit 
@@ -112,9 +111,9 @@ Below are the different values of K tested to find the optimal K for the out-of-
 ```{r echo = FALSE}
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
-# first use the binary responses to get a confusion matrix of probabilities
-k_grid <- exp(seq(log(1), log(10000), length=30)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(5000), length=30)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
+k_grid <- k_grid[k_grid %% 2 != 0]
 k_grid
 ```
 Iterating across the above range of K to find the best out-of-sample accuracy rate, we find that the best K value is when K = 4. A potential reason for why averaging 4 points yields the best out-of-sample accuracy despite such a large dataset (almost 40,000 observations) is  
@@ -132,13 +131,16 @@ confusion_valse =
     
     D_test = arrange(D_test, n_tokens_content)
     
-    X_train = model.matrix(~ 
-                             n_tokens_title + 
-                             num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-                             num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-                             data_channel_is_bus + data_channel_is_socmed +
-                             data_channel_is_tech + data_channel_is_world +
-                             self_reference_min_shares  + avg_negative_polarity - 1, data=D_train)
+    X_train = model.matrix(
+      ~
+        n_tokens_title +
+        num_hrefs + num_self_hrefs + num_imgs + average_token_length +
+        num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
+        data_channel_is_bus + data_channel_is_socmed +
+        data_channel_is_tech + data_channel_is_world +
+        self_reference_min_shares  + avg_negative_polarity - 1,
+      data = D_train
+    )
     
     y_train = dplyr::select(D_train, shares)
     
@@ -161,36 +163,42 @@ confusion_valse =
     # 
     # # scale the test set features using the same scale factors
     # X_test = scale(X_test, scale=scale_factors)
-    
+   
     # KNN 
     knn3 = knn.reg(train = X_train, 
                    test = X_test, y = y_train, k=k)
     
     ypred_knn3 = knn3$pred
+    
     # out of sample confusion matrix
     viral_prediction = ifelse(ypred_knn3 > 1400, 1, 0)
-    confusion_out = table(y = D_test$viral, yhat = viral_prediction)
-    # confusion_out
-    sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
+    # confusion_out = table(y = D_test$viral, yhat = viral_prediction)
     
+    # sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
+    rmse(y_test, knn3$pred)
   }
   mean(out$result)
 }
 confusion_valse
-mean(confusion_valse[[1]])
+mean(confusion_valse)
 
 max(confusion_valse)
-# best_k = which(err_k == max(confusion_valse))
-best_k = k_grid[which(confusion_valse == max(confusion_valse))]
+best_k = k_grid[which(confusion_valse == min(confusion_valse))]
 best_k
 
-plot(k_grid, confusion_valse)
+plot(
+  k_grid,
+  confusion_valse,
+  type = "b",
+  col = "dodgerblue",
+  cex = 1,
+  pch = 20,
+  xlab = "k, Number of Neighbors",
+  ylab = "Regression Error",
+  main = "(Test) Error Rate vs Neighbors for KNN Regression"
+)
 
-# aim for 0.53 (another group at office hours)
-# 0.54732 average with k_grid <- exp(seq(log(1), log(500), length=35)) %>% round %>% unique
-#   and out = do * 10
 
-#0.5482785 with k_grid <- exp(seq(log(1), log(900), length=30)) %>% round %>% unique
 ```
 
 
@@ -202,34 +210,59 @@ ypred_knn3 <- knn3$pred
 
 
 yhat_test_viral1 = ifelse(ypred_knn3 > 1400,1, 0)
+```
+
+The confusion matrix is shown below.
+```{r echo = FALSE}
 confusion_out = table(knn.pred = yhat_test_viral1, Actual = D_test$viral) 
-# summary(confusion_out)
-confusion_out
 
 # Matrix
 colnames(confusion_out) <- c("Not Viral","Viral")
 rownames(confusion_out) <- c("Not Viral","Viral")
 confusion_out %>% kable() %>% kable_styling()
+```
 
+The out-of-sample accuracy is shown below.
+```{r echo = FALSE}
 sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
+```
 
+The overall error rate is shown below.
+```{r echo = FALSE}
 # overall error rate
 1 - sum(diag(confusion_out))/sum(confusion_out)
+```
+
+The true positive rate (percentage of Viral that are correctly identified) is shown below.
+```{r echo = FALSE}
 TP = confusion_out[2,2] / sum(confusion_out[,2])
 TP
+```
 
+The true negative rate (percentage of Nonviral that are correctly identified) is shown below.
+```{r echo = FALSE}
 # The true negative rate is --%, which means --% percentage of Nonviral that are correctly identified.
 TN = confusion_out[1,1] / sum(confusion_out[,1])
 TN
+```
 
+The false positive rate (percentage of Viral incorrectly identified as Nonviral) is shown below.
+```{r echo = FALSE}
 # There are --% of Viral incorrectly identified as Nonviral 
 FP = confusion_out[2,1] / sum(confusion_out[,1])
 FP
+```
 
+The false negative rate (percentage of NonViral incorrectly identified as Viral) is shown below.
+```{r echo = FALSE}
 # There are --% of NonViral incorrectly identified as Viral 
 FN = confusion_out[1,2] / sum(confusion_out[,2])
 FN
+```
 
+In contrast, the null model, which always predicts that an article will not be viral, has an out-of-sample accuracy rate of 0.5065584. The above KNN regression model has a slightly higher out-of-sample accuracy rate; however, it is inherently difficult to predict whether an article will go viral, so this number is still relatively low.
+
+```{r echo = FALSE}
 # null model, always predicts "not viral"
 lm_lame = lm(!viral ~ 1, data = arti)
 
@@ -289,31 +322,32 @@ calc_class_err = function(actual, predicted) {
   mean(actual != predicted)
 }
 
-calc_class_err(actual = y_test2,
-               predicted = knn(train = X_train2,
-                               test  = X_test2,
-                               cl = y_train2,
-                               k = 100))
+# calc_class_err(actual = y_test2,
+#                predicted = knn(train = X_train2,
+#                                test  = X_test2,
+#                                cl = y_train2,
+#                                k = 100))
 
 set.seed(1)
 # k_to_try = 1:30
-# err_k = rep(x = 0, times = length(k_to_try))
-# for (i in seq_along(k_to_try)) {
-#   pred = knn(train = scale(X_train2),
-#              test  = scale(X_test2),
-#              cl    = y_train2,
-#              k     = k_to_try[i])
-#   err_k[i] = calc_class_err(y_test2, pred)
-# }
-
-err_k = rep(x = 0, times = length(k_grid))
-for (i in seq_along(k_grid)) {
+# k_to_try = 1:50
+k_to_try = k_grid
+err_k = rep(x = 0, times = length(k_to_try))
+for (i in seq_along(k_to_try)) {
   pred = knn(train = scale(X_train2),
              test  = scale(X_test2),
              cl    = y_train2,
-             k     = k_grid[i])
+             k     = k_to_try[i])
   err_k[i] = calc_class_err(y_test2, pred)
 }
+# k_grid = k_grid[0:10]
+# for (i in seq_along(k_grid)) {
+#   pred = knn(train = scale(X_train2),
+#              test  = scale(X_test2),
+#              cl    = y_train2,
+#              k     = k_grid[i])
+#   err_k[i] = calc_class_err(y_test2, pred)
+# }
 
 ```
 
@@ -321,11 +355,21 @@ The following chart shows the relationship between the value of K and classifica
 
 ## debug get rid of hard coded numbers
 ```{r echo = FALSE}
-plot(err_k, type = "b", col = "dodgerblue", cex = 1, pch = 20, 
-     xlab = "k, number of neighbors", ylab = "classification error",
-     main = "(Test) Error Rate vs Neighbors")
+plot(
+  err_k,
+  type = "b",
+  col = "dodgerblue",
+  cex = 1,
+  pch = 20,
+  xlab = "k, number of neighbors",
+  ylab = "classification error",
+  main = "(Test) Error Rate vs Neighbors for KNN Classification"
+)
+```
+
+```{r echo = FALSE}
 min(err_k)
-which(err_k == min(err_k))
+cat('Min Error Rate with K', which(err_k == min(err_k)))
 table(y_test2)
 ```
 There is an average of 49% of Viral and 51% Nonviral in the test set.
@@ -335,11 +379,8 @@ mean(y_test2 == "0")
 ```
 Below, the confusion matrix for the KNN classification method is displayed.
 ```{r echo = FALSE}
-confusion_out_2 = table(knn.pred = knn3_2, Actu = D_test2$viral) 
-confusion_out_2
-```
+confusion_out_2 = table(knn.pred = knn3_2, Actual = D_test2$viral) 
 
-```{r echo = FALSE}
 # 2067 number of Viral in real which is Viral in predicted. 
 # 2336 number of Nonviral in real which is Nonviral in predicted. 
 # 1654 number of Nonviral in real which is Viral in predicted. 
@@ -352,25 +393,41 @@ The out-of-sample accuracy is shown below.
 ```{r echo = FALSE}
 # 56% of the observations are correctly predicted by using this model. 
 sum(diag(confusion_out_2))/sum(confusion_out_2) # out-of-sample accuracy
-
+```
+The overall error rate is shown below.
+```{r echo = FALSE}
 # Overall error rate is 44%
 1 - sum(diag(confusion_out_2))/sum(confusion_out_2)
-
+```
+The true positive rate (percentage of Viral that are correctly identified) is shown below.
+```{r echo = FALSE}
 # The true positive rate is 54%, which means 54% percentage of Viral that are correctly identified.
 TP = confusion_out_2[2,2] / sum(confusion_out_2[,2])
 TP
-
+```
+The true negative rate (percentage of Nonviral that are correctly identified) is shown below.
+```{r echo = FALSE}
 # The true negative rate is 56%, which means 56% percentage of Nonviral that are correctly identified.
 TN = confusion_out_2[1,1] / sum(confusion_out_2[,1])
 TN
-
+```
+The false positive rate (percentage of Viral incorrectly identified as Nonviral) is shown below.
+```{r echo = FALSE}
 # There are 43% of Viral incorrectly identified as Nonviral 
 FP = confusion_out_2[2,1] / sum(confusion_out_2[,1])
 FP
-
+```
+The false negative rate (percentage of NonViral incorrectly identified as Viral) is shown below.
+```{r echo = FALSE}
 # There are 45% of NonViral incorrectly identified as Viral 
 FN = confusion_out_2[1,2] / sum(confusion_out_2[,2])
 FN
 
 ```
+# Comparing Approach Performance
+The KNN regression approach (regress first and threshold second) had an out-of-sample accuracy rate of around 0.532, whereas the KNN classification approach (threshold first and regress/classify second) had about 0.556 accuracy out-of-sample.
+
+<!-- The KNN regression method has a smaller optimal K value where the error is lowest (K = 4), as opposed to the KNN classification method which has an optimal K that is much higher. -->
+
+The difference between these numbers varies when using different train-test splits. 
 
