@@ -160,6 +160,12 @@ RMSE of `r best_rmse`.
 On the other hand, the linear regression model achieved a far superior prediction RMSE of 
 `r results$lm_rmse[1]`.
 
+Figure 1 displays prediction RMSE against increasing values of K. The RMSE for 
+K-nearest-neighbors is displayed in red. The RMSE of the linear regression model is 
+the blue horizontal line.
+
+[Figure 1 here]
+
 The greater predictive accuracy of the linear regresson model is the result of using the
 right set of predictor attributes, modeling the interactions among those predictors, and
 adding flexibility to the model through the use of the cubic spline, which divides the
@@ -168,7 +174,11 @@ to each interval separately.
 
 In particular, using age and percent of college graduates as simple predictors doesn't 
 give the linear model much improvement in predictive power. However, using the cubic spline
-mentioned above results in a dramatic improvement.
+mentioned above results in a dramatic improvement. Figures 2 and 3 below show the result
+of fitting a cubic spline separately for both 
+
+[Figure 2]
+[Figure 3]
 
 Including interactions in the linear regression model provides a way to incorporate the
 effect that one predictor variable has on another predictor variable into the model.
@@ -176,14 +186,20 @@ For example, living area is a powerful predictor of housing prices considered al
 But by also considering the effect that living area has on prices in the context of the
 values of other predictor variables, more accurate modeling and hence predictions are made.
 
-For example, the following plot shows not only that larger living areas are associated
+For example, Figure 4 shows not only that larger living areas are associated
 with higher house prices, but that, for houses with similar living areas, the presence of
 central air conditioning may have a substantial effect on the house price. Considering
 the joint effect of living area with both the number of bedrooms and the number of
 bathrooms also boosts the predictive accuracy of the model.
 
+[Figure 4]
+
 Finally, as might be expected, including indicators for whether a house is a waterfront
-property or is newly constructed also improves prediction accuracy.
+property or is newly constructed also improves prediction accuracy. Figures 5 and 6 show
+the relationship between each of those attributes and house prices.
+
+[Figure 5]
+[Figure 6]
 
 ### Conclusion
 
