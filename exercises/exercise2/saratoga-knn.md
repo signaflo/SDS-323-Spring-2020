@@ -17,7 +17,7 @@ used for that heating system.
 
 ### Methods
 
-Two methods are used to analyze the data and form predicted house
+Two methods were used to analyze the data and form predicted house
 prices. The first was linear regression, which assumes that house price
 is a linear function of the predictive attributes, and the second is
 K-nearest-neighbors regression, which makes no assumptions about the
