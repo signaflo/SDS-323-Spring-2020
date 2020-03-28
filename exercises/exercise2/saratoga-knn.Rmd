@@ -19,8 +19,8 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 The data set used to answer this question includes the prices of 1,728 houses in 
 Saratoga County, New York in the year 2006. In addition to price, the data set includes
-15 other attributes for each house --- 9 quantitative, including house age, living area,
-and number of bedrooms, and 6 categorical, including whether the house has central air
+15 other attributes for each house --- 9 quantitative, e.g., house age, living area,
+and number of bedrooms, and 6 categorical, e.g., whether the house has central air
 conditioning, is a new construction, the type of heating system, and the type of fuel
 used for that heating system.
 
@@ -51,6 +51,7 @@ the predictors and prices, and ultimately by the ability of each potential predi
 The attributes that were used to predict housing prices are given in Table 1
 
 __Table 1__
+
 | Attribute        | Description                                            |
 | ---------        | --------------------------------------                 |
 | living area      | living area in square feet                             |
@@ -110,8 +111,6 @@ rmse_vals <- do(250) * {
   
 }
 
-mean(rmse_vals$result)
-
 k_grid <- exp(seq(log(1), log(100), length=33)) %>% round %>% unique
 
 rmse_grid <- foreach(K = k_grid, .combine='c') %do% {
@@ -155,10 +154,10 @@ best_rmse <- rmse_results$k_rmse[best_k_index] %>% round
 ```
 
 The best performing K-nearest-neighbors model was at K = `r best_k` which had a prediction
-RMSE of `r best_rmse`.
+RMSE of `r as.integer(best_rmse)`.
 
 On the other hand, the linear regression model achieved a far superior prediction RMSE of 
-`r lm_rmse`.
+`r as.integer(lm_rmse)`.
 
 Figure 1 displays prediction RMSE against increasing values of K. The RMSE for 
 K-nearest-neighbors is displayed in red. The RMSE of the linear regression model is 
@@ -277,16 +276,17 @@ County.
 
 Specifically, the Saratoga County tax authority should predict prices using a linear
 regression model using the following approach.
- 1. Include living area and consider it the most important determinant of house price.
- 2. Consider central air conditioning, the number of bedrooms, the number of bathrooms,
- and make sure to include the interaction between each of those predictors and living area.
- 3. Include waterfront property and new constructions as simple predictors.
- 4. Include age of the house and percent of college graduates in the neighborhood as 
- predictors. However, use cubic splines with each predictor. More specifically, divide 
- each predictor into 5 intervals using the 20th, 40th, 60th, and 80th percentile. Then, on
- each interval fit a cubic polynomial and join together the resulting curves across all
- intervals to achieve one smooth, non-linear curve.
+
+1. Include living area and consider it the most important determinant of house price.
+2. Consider central air conditioning, the number of bedrooms, the number of bathrooms,
+and make sure to include the interaction between each of those predictors and living area.
+3. Include waterfront property and new constructions as simple predictors.
+4. Include age of the house and percent of college graduates in the neighborhood as 
+predictors. However, use cubic splines with each predictor. More specifically, divide 
+each predictor into 5 intervals using the 20th, 40th, 60th, and 80th percentile. Then, on
+each interval fit a cubic polynomial and join together the resulting curves across all
+intervals to achieve one smooth, non-linear curve.
  
- By following the approach outlined above the Saratoga County tax authority will obtain
- very accurate predictions for house prices and be able to confidentally determine the
- appropriate taxing strategy.
+By following the approach outlined above the Saratoga County tax authority will obtain
+very accurate predictions for house prices and be able to confidentally determine the
+appropriate taxing strategy.

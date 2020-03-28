@@ -10,10 +10,10 @@ Saratoga House Prices
 The data set used to answer this question includes the prices of 1,728
 houses in Saratoga County, New York in the year 2006. In addition to
 price, the data set includes 15 other attributes for each house — 9
-quantitative, including house age, living area, and number of bedrooms,
-and 6 categorical, including whether the house has central air
-conditioning, is a new construction, the type of heating system, and the
-type of fuel used for that heating system.
+quantitative, e.g., house age, living area, and number of bedrooms, and
+6 categorical, e.g., whether the house has central air conditioning, is
+a new construction, the type of heating system, and the type of fuel
+used for that heating system.
 
 ### Methods
 
@@ -49,24 +49,58 @@ predictions.
 The attributes that were used to predict housing prices are given in
 Table 1
 
-**Table 1** | Attribute | Description | | ——— | ————————————– | | living
-area | living area in square feet | | bedrooms | The number of bedrooms
-in the house | | bathrooms | The number of bathrooms in the house | |
-central air | whether the house includes central air conditioning | |
-age | The age of the house in years | | percent college | The percent of
-the neighborhood that graduated college | | waterfront | Whether the
-house is a waterfront property | | new construction | Whether the house
-was newly constructed |
+**Table 1**
+
+<table>
+<thead>
+<tr class="header">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>living area</td>
+<td>living area in square feet</td>
+</tr>
+<tr class="even">
+<td>bedrooms</td>
+<td>The number of bedrooms in the house</td>
+</tr>
+<tr class="odd">
+<td>bathrooms</td>
+<td>The number of bathrooms in the house</td>
+</tr>
+<tr class="even">
+<td>central air</td>
+<td>whether the house includes central air conditioning</td>
+</tr>
+<tr class="odd">
+<td>age</td>
+<td>The age of the house in years</td>
+</tr>
+<tr class="even">
+<td>percent college</td>
+<td>The percent of the neighborhood that graduated college</td>
+</tr>
+<tr class="odd">
+<td>waterfront</td>
+<td>Whether the house is a waterfront property</td>
+</tr>
+<tr class="even">
+<td>new construction</td>
+<td>Whether the house was newly constructed</td>
+</tr>
+</tbody>
+</table>
 
 ### Results
 
-    ## [1] 59763.5
-
 The best performing K-nearest-neighbors model was at K = 15 which had a
-prediction RMSE of 6.445610^{4}.
+prediction RMSE of 64456.
 
 On the other hand, the linear regression model achieved a far superior
-prediction RMSE of 5.976410^{4}.
+prediction RMSE of 59764.
 
 Figure 1 displays prediction RMSE against increasing values of K. The
 RMSE for K-nearest-neighbors is displayed in red. The RMSE of the linear
@@ -142,18 +176,21 @@ recommended approach for predicting house prices to help determine tax
 rates in Saratoga County.
 
 Specifically, the Saratoga County tax authority should predict prices
-using a linear regression model using the following approach. 1. Include
-living area and consider it the most important determinant of house
-price. 2. Consider central air conditioning, the number of bedrooms, the
-number of bathrooms, and make sure to include the interaction between
-each of those predictors and living area. 3. Include waterfront property
-and new constructions as simple predictors. 4. Include age of the house
-and percent of college graduates in the neighborhood as predictors.
-However, use cubic splines with each predictor. More specifically,
-divide each predictor into 5 intervals using the 20th, 40th, 60th, and
-80th percentile. Then, on each interval fit a cubic polynomial and join
-together the resulting curves across all intervals to achieve one
-smooth, non-linear curve.
+using a linear regression model using the following approach.
+
+1.  Include living area and consider it the most important determinant
+    of house price.
+2.  Consider central air conditioning, the number of bedrooms, the
+    number of bathrooms, and make sure to include the interaction
+    between each of those predictors and living area.
+3.  Include waterfront property and new constructions as simple
+    predictors.
+4.  Include age of the house and percent of college graduates in the
+    neighborhood as predictors. However, use cubic splines with each
+    predictor. More specifically, divide each predictor into 5 intervals
+    using the 20th, 40th, 60th, and 80th percentile. Then, on each
+    interval fit a cubic polynomial and join together the resulting
+    curves across all intervals to achieve one smooth, non-linear curve.
 
 By following the approach outlined above the Saratoga County tax
 authority will obtain very accurate predictions for house prices and be
