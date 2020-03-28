@@ -194,7 +194,35 @@ regression since it makes no assumptions about the underlying form of the relati
 between the response variable and the predictor variables, while linear regression does 
 assume that a linear function can adequately model the response.
 
-However, linear 
+However, linear regression has two big advantages. One, it can be made substantially more
+flexible by extending it with nonlinear techniques such as the cubic splines used on age
+and percent of college graduates. Two, the interactions, i.e., context-specific effects
+between variables can be made clear and explicit. Using linear regression gives us a 
+precise way to model how central air conditioning's effect on house price depends on
+the living area of the house.
+
+With all that said, if K-nearest-neighbors had outperformed linear regression in terms of
+predictive accuracy, then that would be the recommended approach for determining house 
+prices and setting tax rates. But that was not the case here. In fact, the linear
+regression model signficantally outperformed K-nearest-neighbors and therefore is the
+recommended approach for predicting house prices to help determine tax rates in Saratoga
+County.
+
+Specifically, the Saratgo County tax authority should predict prices using a linear
+regression model using the following approach.
+ 1. Include living area and consider it the most important determinant of house price.
+ 2. Consider central air conditioning, the number of bedrooms, the number of bathrooms,
+ and make sure to include the interaction between each of those predictors and living area.
+ 3. Include waterfront property and new constructions as simple predictors.
+ 4. Include age of the house and percent of college graduates in the neighborhood as 
+ predictors. However, use cubic splines with each predictor. More specifically, divide 
+ each predictor into 5 intervals using the 20th, 40th, 60th, and 80th percentile. Then, on
+ each interval fit a cubic polynomial and join together the resulting curves across all
+ intervals to achieve one smooth, non-linear curve.
+ 
+ By following the approach outlined above the Saratoga County tax authority will obtain
+ very accurate predictions for house prices and be able to confidentally determine the
+ appropriate taxing strategy.
 
 ```{r}
 ggplot(data = SaratogaHouses) +
