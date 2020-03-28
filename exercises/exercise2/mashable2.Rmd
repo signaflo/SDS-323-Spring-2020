@@ -42,7 +42,6 @@ On a more intuitive level, ___________________.
 arti <- arti %>% 
   mutate(viral = ifelse(shares > 1400, 1, 0))
 
-
 # Make a train - test split 
 N = nrow(arti)
 N_train = floor(0.8 * N)
@@ -54,7 +53,6 @@ D_train = arti[train_ind,]
 D_test = arti[-train_ind,]
 
 D_test = arrange(D_test, n_tokens_content)
-# head(D_test)
 
 X_train = model.matrix( ~ n_tokens_title + 
                          num_hrefs + num_self_hrefs + num_imgs + average_token_length +
@@ -75,21 +73,17 @@ X_test = model.matrix( ~ n_tokens_title +
 y_test = dplyr::select(D_test, shares)
 
 # # scale the training set features
-# scale_factors = apply(X_train, 2, sd)
-# X_train = scale(X_train, scale=scale_factors)
-# 
-# # scale the test set features using the same scale factors
-# X_test = scale(X_test, scale=scale_factors)
+scale_factors = apply(X_train, 2, sd)
+X_train = scale(X_train, scale=scale_factors)
+
+# scale the test set features using the same scale factors
+X_test = scale(X_test, scale=scale_factors)
 
 
 # KNN 
 knn3 = knn.reg(train = X_train, 
                test = X_test, y = y_train, k=3)
-# names(knn3)
 
-#####
-# Compare the models by RMSE_out
-#####
 rmse = function(y, ypred) {
   sqrt(mean(data.matrix((y-ypred)^2)))
 }
@@ -111,7 +105,7 @@ Below are the different values of K tested to find the optimal K for the out-of-
 ```{r echo = FALSE}
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
-k_grid <- exp(seq(log(1), log(5000), length=30)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(600), length=40)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid <- k_grid[k_grid %% 2 != 0]
 k_grid
@@ -158,11 +152,11 @@ confusion_valse =
     y_test = dplyr::select(D_test, shares)
     
     # scale the training set features
-    # scale_factors = apply(X_train, 2, sd)
-    # X_train = scale(X_train, scale=scale_factors)
-    # 
-    # # scale the test set features using the same scale factors
-    # X_test = scale(X_test, scale=scale_factors)
+    scale_factors = apply(X_train, 2, sd)
+    X_train = scale(X_train, scale=scale_factors)
+
+    # scale the test set features using the same scale factors
+    X_test = scale(X_test, scale=scale_factors)
    
     # KNN 
     knn3 = knn.reg(train = X_train, 
@@ -180,9 +174,10 @@ confusion_valse =
   mean(out$result)
 }
 confusion_valse
-mean(confusion_valse)
+mean(confusion_valse[[1]])
 
 max(confusion_valse)
+
 best_k = k_grid[which(confusion_valse == min(confusion_valse))]
 best_k
 
@@ -278,7 +273,7 @@ Approaching the problem from where the dependent variable is a binary, or dummy,
 
 ```{r echo = FALSE}
 ############################ 
-
+set.seed(1)
 standardized.X = scale(arti[, -1])
 var(arti[,2])
 var(standardized.X[,2])
@@ -331,15 +326,29 @@ calc_class_err = function(actual, predicted) {
 set.seed(1)
 # k_to_try = 1:30
 # k_to_try = 1:50
+
 k_to_try = k_grid
-err_k = rep(x = 0, times = length(k_to_try))
-for (i in seq_along(k_to_try)) {
+# err_k = rep(x = 0, times = length(k_to_try))
+# for (i in seq_along(k_to_try)) {
+#   pred = knn(train = scale(X_train2),
+#              test  = scale(X_test2),
+#              cl    = y_train2,
+#              k     = k_to_try[i])
+#   err_k[i] = calc_class_err(y_test2, pred)
+# }
+
+err_k=
+foreach(k = k_grid,  .combine='c') %do% {
+  out = do(10)*{
   pred = knn(train = scale(X_train2),
              test  = scale(X_test2),
              cl    = y_train2,
-             k     = k_to_try[i])
-  err_k[i] = calc_class_err(y_test2, pred)
+             k     = k)
+  calc_class_err(y_test2, pred)
+  }
+  # mean(out$result)
 }
+    
 # k_grid = k_grid[0:10]
 # for (i in seq_along(k_grid)) {
 #   pred = knn(train = scale(X_train2),
