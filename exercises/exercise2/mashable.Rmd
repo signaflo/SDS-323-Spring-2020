@@ -6,7 +6,11 @@ output: HTML_document
 # output: md_document
 ---
 
-```{r setup, include = FALSE, message = FALSE, echo = FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
 library(mosaic)
 library(tidyverse)
 library(FNN)
@@ -19,7 +23,9 @@ library(kableExtra)
 library(knitr)
 library(ggthemes)
 
-arti = read.csv("online_news.csv")
+set.seed(1001)
+arti = read.csv("./data/online_news.csv")
+arti <- arti %>% mutate(viral = ifelse(shares > 1400, 1, 0))
 
 ```
 # Becoming "Viral"
@@ -39,71 +45,10 @@ We fit a linear regression model to predict the number of times an article was s
 
 On a more intuitive level, ___________________.
 ```{r echo = FALSE}
-arti <- arti %>% 
-  mutate(viral = ifelse(shares > 1400, 1, 0))
 
-
-# Make a train - test split 
-N = nrow(arti)
-N_train = floor(0.8 * N)
-N_test = N - N_train
-
-train_ind = sample.int(N, N_train, replace=FALSE)
-
-D_train = arti[train_ind,]
-D_test = arti[-train_ind,]
-
-D_test = arrange(D_test, n_tokens_content)
-# head(D_test)
-
-X_train = model.matrix( ~ n_tokens_title + 
-                         num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-                         num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-                         data_channel_is_bus + data_channel_is_socmed +
-                         data_channel_is_tech + data_channel_is_world +
-                         self_reference_min_shares  + avg_negative_polarity - 1, data=D_train)
-
-y_train = dplyr::select(D_train, shares)
-
-X_test = model.matrix( ~ n_tokens_title + 
-                        num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-                        num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-                        data_channel_is_bus + data_channel_is_socmed +
-                        data_channel_is_tech + data_channel_is_world +
-                        self_reference_min_shares  + avg_negative_polarity - 1, data=D_test)
-
-y_test = dplyr::select(D_test, shares)
-
-# # scale the training set features
-# scale_factors = apply(X_train, 2, sd)
-# X_train = scale(X_train, scale=scale_factors)
-# 
-# # scale the test set features using the same scale factors
-# X_test = scale(X_test, scale=scale_factors)
-
-
-# KNN 
-knn3 = knn.reg(train = X_train, 
-               test = X_test, y = y_train, k=3)
-# names(knn3)
-
-#####
-# Compare the models by RMSE_out
-#####
 rmse = function(y, ypred) {
   sqrt(mean(data.matrix((y-ypred)^2)))
 }
-
-ypred_knn3 = knn3$pred
-
-# Calculate the root mean square error 
-# Compare predictions with test articles
-# rmse(y_test, ypred_knn3)
-
-
-#Plot the fit 
-
-D_test$ypred_knn3 = ypred_knn3
 
 ```
 Below are the different values of K tested to find the optimal K for the out-of-sample accuracy.
@@ -111,7 +56,7 @@ Below are the different values of K tested to find the optimal K for the out-of-
 ```{r echo = FALSE}
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
-k_grid <- exp(seq(log(1), log(5000), length=30)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(100), length=30)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid <- k_grid[k_grid %% 2 != 0]
 k_grid
@@ -119,50 +64,47 @@ k_grid
 Iterating across the above range of K to find the best out-of-sample accuracy rate, we find that the best K value is when K = 4. A potential reason for why averaging 4 points yields the best out-of-sample accuracy despite such a large dataset (almost 40,000 observations) is  
 ```{r echo = FALSE}
 # create a confusion matrix for multiple K values
-set.seed(1)
-confusion_valse = 
-  foreach(k = k_grid,  .combine='c') %do% {
-  out = do(10)*{
+# Make a train - test split 
+N = nrow(arti)
+N_train = floor(0.8 * N)
+N_test = N - N_train
+
+repetitions <- 10
+
+confusion_matrices <- vector("list", length = repetitions)
+confusion_valse = foreach(k = k_grid,  .combine='c') %do% {
+  out = do(repetitions)*{
     # re-split into train and test cases with the same sample sizes
     train_ind = sample.int(N, N_train, replace=FALSE)
     
     D_train = arti[train_ind,]
     D_test = arti[-train_ind,]
     
-    D_test = arrange(D_test, n_tokens_content)
     
-    X_train = model.matrix(
-      ~
-        n_tokens_title +
-        num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-        num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-        data_channel_is_bus + data_channel_is_socmed +
-        data_channel_is_tech + data_channel_is_world +
-        self_reference_min_shares  + avg_negative_polarity - 1,
-      data = D_train
-    )
+    X_train = model.matrix(~ n_tokens_title +
+                             num_hrefs + num_self_hrefs + num_imgs + average_token_length +
+                             num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
+                             data_channel_is_bus + data_channel_is_socmed + data_channel_is_tech +
+                             data_channel_is_world + self_reference_min_shares  +
+                             avg_negative_polarity - 1,  data = D_train)
     
-    y_train = dplyr::select(D_train, shares)
+    y_train = as.numeric(dplyr::select(D_train, shares)$shares)
     
     
-    X_test = model.matrix(
-      ~  n_tokens_title +
-        num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-        num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-        data_channel_is_bus + data_channel_is_socmed +
-        data_channel_is_tech + data_channel_is_world +
-        self_reference_min_shares  + avg_negative_polarity - 1,
-      data = D_test
-    )
+    X_test = model.matrix(~ n_tokens_title +
+                             num_hrefs + num_self_hrefs + num_imgs + average_token_length +
+                             num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
+                             data_channel_is_bus + data_channel_is_socmed + data_channel_is_tech +
+                             data_channel_is_world + self_reference_min_shares  +
+                             avg_negative_polarity - 1, data = D_test)
     
-    y_test = dplyr::select(D_test, shares)
+    y_test = as.numeric(dplyr::select(D_test, shares)$shares)
     
     # scale the training set features
-    # scale_factors = apply(X_train, 2, sd)
-    # X_train = scale(X_train, scale=scale_factors)
-    # 
-    # # scale the test set features using the same scale factors
-    # X_test = scale(X_test, scale=scale_factors)
+    scale_factors = apply(X_train, 2, sd)
+    X_train = scale(X_train, scale=scale_factors)
+    # scale the test set features using the same scale factors
+    X_test = scale(X_test, scale=scale_factors)
    
     # KNN 
     knn3 = knn.reg(train = X_train, 
@@ -172,10 +114,8 @@ confusion_valse =
     
     # out of sample confusion matrix
     viral_prediction = ifelse(ypred_knn3 > 1400, 1, 0)
-    # confusion_out = table(y = D_test$viral, yhat = viral_prediction)
-    
-    # sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
-    rmse(y_test, knn3$pred)
+    confusion_out = table(D_test$viral, yhat = viral_prediction)
+    sum(diag(confusion_out))/sum(confusion_out) # out-of-sample accuracy
   }
   mean(out$result)
 }
@@ -183,7 +123,7 @@ confusion_valse
 mean(confusion_valse)
 
 max(confusion_valse)
-best_k = k_grid[which(confusion_valse == min(confusion_valse))]
+best_k = k_grid[which.max(confusion_valse == max(confusion_valse))]
 best_k
 
 plot(
@@ -203,9 +143,7 @@ plot(
 
 
 ```{r echo = FALSE}
-set.seed(1)
-knn3 = knn.reg(train = X_train, 
-               test = X_test, y = y_train, k=best_k)  
+knn3 = knn.reg(train = X_train, test = X_test, y = y_train, k=best_k)
 ypred_knn3 <- knn3$pred
 
 
