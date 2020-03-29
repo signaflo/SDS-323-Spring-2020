@@ -64,7 +64,7 @@ ggplot() +
 ```
 
 
-The 350 trim only has data on the years 1994, 1995, 2006, 2012, and 2013. Each year is concentrated in a particular section of the scatterplot, so it is likely that an observation's nearest neighbors would be close to it in time as well. Because of the huge gap in time between 1995 and 2006, there is a disjoint section for cars with mileage around 25,000.
+The 350 trim only has data on the years 1994, 1995, 2006, 2012, and 2013. Each year is concentrated in a particular section of the scatterplot, so it is likely that an observation's nearest neighbors would be close to it in time as well. Because of the huge gap in time between 1995 and 2006, there is a disjoint section for cars with mileage around 25,000. This may influence the model because of the jump in data.
 
 ```{r echo = FALSE}
 ggplot(data=sclass350, aes(x=mileage, y=price)) +
@@ -315,7 +315,7 @@ g_train + geom_path(mapping = aes(x=mileage, y=ypred), color='red', size=1.5) +
 
 ### Why do the optimal Ks differ for each trim?
 
-Looking at a summary of price for the two different trims, it is apparent that there is a tremendous difference in the price ranges for the two car sub-models.
+Looking at a summary of price for the two different trims, it is apparent that there is a tremendous difference in the price ranges for the two car sub-models. The distribution of mileage for the two trims is also different, with the 350 trim having a more normal distribution with positive skew, and the 65 trim having many observations with very low or zero values.
 
 ```{r echo=FALSE}
 
@@ -339,7 +339,7 @@ ggplot(plot.data, aes(x = trim, y = price)) + geom_boxplot() + labs(title = "Sig
 ggplot(sclass350, aes(x=mileage))+ 
   geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
   geom_density(alpha=.2, fill="#FF6666") +
-  ggtitle("Distribution of 350 Trim")+
+  ggtitle("Distribution of Mileage for 350 Trim")+
   labs(x="Mileage", y="Density")
 ```
 
@@ -347,7 +347,7 @@ ggplot(sclass350, aes(x=mileage))+
 ggplot(sclass65, aes(x=mileage))+ 
   geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
   geom_density(alpha=.2, fill="#FF6666") +
-  ggtitle("Distribution of 65 AMG Trim")+
+  ggtitle("Distribution of Mileage for 65 AMG Trim")+
   labs(x="Mileage", y="Density")
 ```
 
@@ -357,5 +357,7 @@ It seems that the 65 AMG trim has a much wider range, so the best KNN model gene
 Visually, if we compare the price of each trim to mileage in the initial graphs, the 65 AMG trim points are more spread out and have several points with mileage values between 200,000 and 250,000 with low or zero prices that could skew the results. Since the trend here is much less obvious, the model benefits from a higher K; more points are being averaged over and it results in a more "smoothed out" model. Conversely, the 350 trim (although it appears to have 2 or 3 separate sub-groupings with different slopes) has a more linear trend, so the K performs better when it is smaller and more granular.
 
 If we compare the RMSEs for both, the out-of-sample RMSE for the 65 trim model is almost twice that of the 350 model, so the model is worse for the 65 AMG trim, likely due to the variation as described above. The relatively higher K and RMSE values for the 65 AMG trim could suggest high bias; the model is oversimplifying and struggling to make a prediction. Another indication of this is that the regression models perform better for the 350 trim than for the 65 AMG trim; a second-degree polynomial does not perform much better than a linear line for the 350 trim, whereas the linear model has an extremely high error rate compared to the polynomial and the KNN model.
+
+In short, the 65 AMG trim is more difficult to predict than the 350 trim due to less data being available, the more nonlinear pattern of price to mileage, and the presence of leverage outliers.
 
 
