@@ -76,9 +76,8 @@ k_grid <- exp(seq(log(1), log(100), length=33)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid
 ```
-<!-- Iterating across the above range of K to find the best out-of-sample accuracy rate, we find that the best K value is when K = 4. A potential reason for why averaging 4 points yields the best out-of-sample accuracy despite such a large dataset (almost 40,000 observations) is  _____________ -->
 
-Iterating across the above range of K to find the best out-of-sample accuracy rate, we find that the best K value is when K = 4. This makes sense because for KNN regression, the best results occur with a very large value of K, corresponding to a small value of 1/K.
+Iterating across the above range of K to find the lowest RMSE (Root Mean Square Error), we find that the best K value is when K = 87. However, the K value with the highest out-of-sample accuracy is K = 4.
 ```{r echo = FALSE}
 # create a confusion matrix for multiple K values
 # Make a train - test split 
@@ -88,7 +87,7 @@ N_test = N - N_train
 
 rmse_grid = list()
 
-repetitions <- 10
+repetitions <- 50
 confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
   out = do(repetitions) * {
     # re-split into train and test cases with the same sample sizes
@@ -141,11 +140,21 @@ confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
   }
   colMeans(out)
 }
+```
+
+Below is the best K value for out-of-sample accuracy. Although it seems like a low K value is not optimal for minimizing RMSE since it would lead to overfitting of the data, K = 4 has a RMSE of 11274.52, as opposed to K = 87 with a RMSE of 11250.48.
+```{r echo = FALSE}
 rownames(confusion_matrix_values) <- paste("K", k_grid, sep = "")
 accuracy <- rowSums(confusion_matrix_values[,1:2]) / rowSums(confusion_matrix_values)
 best_acc_k = k_grid[which.max(accuracy)]
 best_acc_k
 
+rmse_most_accurate_k = rmse(y_test, best_acc_k)
+rmse_most_accurate_k
+```
+
+Below is a plot of the K against the out-of-sample accuracy rate. While the RMSE is lower for K = 87, creating a model that is applicable to new data and accurate is also a high priority.
+```{r echo = FALSE}
 plot(
   k_grid,
   accuracy,
@@ -158,13 +167,22 @@ plot(
   main = "KNN Regression Accuracy"
 )
 
+
 ```
 
-Below is a plot to find the optimal K based on minimizing the RMSE. From this, we find that the best K value is when K = 87.
+It is best to have both a low RMSE and high accuracy rate. 
+
+K = 87 has an accuracy rate of 0.4934416, error rate of 0.5065584, true positive rate of 0.9907716, and false positive rate of 0.9764151. 
+
+Meanwhile, K = 4 has accuracy rate of 0.5541682, error rate of 0.4458318, true positive rate of 0.7754422, and false positive rate of 0.6601291.
+
+Thus, K = 4 satisfies the criteria better than K = 87, so we find the optimal K based on a higher accuracy rate out-of-sample.
 ```{r echo = FALSE}
 best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
 best_k
 
+rmse_best_k = rmse(y_test, best_k)
+rmse_best_k
 
 plot(
   k_grid,
@@ -183,14 +201,14 @@ plot(
 
 
 ```{r echo = FALSE}
-knn_model = knn.reg(train = X_train, test = X_test, y = y_train, k=best_k)
+knn_model = knn.reg(train = X_train, test = X_test, y = y_train, k=best_acc_k)
 knn_model_predictions <- knn_model$pred
 
 
 yhat_test_viral1 = ifelse(knn_model_predictions > 1400,1, 0)
 ```
 
-The confusion matrix is shown below.
+The confusion matrix for K = 4 is shown below.
 ```{r echo = FALSE}
 confusion_out = table(knn.pred = yhat_test_viral1, Actual = D_test$viral) 
 
@@ -238,14 +256,14 @@ FN = confusion_out[1,2] / sum(confusion_out[,2])
 FN
 ```
 
-In contrast, the null model, which always predicts that an article will not be viral, has an out-of-sample accuracy rate of 0.5065584. The above KNN regression model has a slightly higher out-of-sample accuracy rate of 0.5524026; however, it is inherently difficult to predict whether an article will go viral, so this number is still relatively low.
+In contrast, the null model, which always predicts that an article will not be viral, has a true positive rate of 0.4934416. The above KNN regression model has a slightly higher out-of-sample accuracy rate of about 0.552; however, it is inherently difficult to predict whether an article will go viral, so this number is still relatively low.
 
 ```{r echo = FALSE}
 # null model, always predicts "not viral"
 lm_lame = lm(!viral ~ 1, data = articles)
 
 # do the TP for null
-coef(lm_lame)
+1 - coef(lm_lame)
 # do false negative
 ## debug
 # nonviral in real?
