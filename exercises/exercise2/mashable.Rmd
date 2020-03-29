@@ -28,13 +28,13 @@ articles = read.csv("online_news.csv")
 articles <- articles %>% mutate(viral = ifelse(shares > 1400, 1, 0))
 
 ```
-# Becoming "Viral"
+# Problem 3
+## Becoming "Viral"
 Mashable currently has about 49% of its articles go "viral," or get shared more than 1,400 times. Is there any way to improve this, or is it completely random?
 
 There are several factors that can be considered. These include, but are not limited to, the subject matter (e.g., "Entertainment", "World", "Tech"), day of publication, and polarity of the words in the article's content and title.
  
-
-# KNN Regression Approach
+## KNN Regression Approach
 We fit a linear regression model to predict the number of times an article was shared using several variables, including the number of words in the title, number of links (in general and to other Mashable articles), subject matter, and average negative polarity of the article. These variables were selected based upon their statistical significance in a regression with all of the variables in the dataset used to predict number of shares.
 
 A comprehensive overview of the variables used in our regression model is summarized in the table below.
@@ -86,6 +86,8 @@ N = nrow(articles)
 N_train = floor(0.8 * N)
 N_test = N - N_train
 
+rmse_grid = list()
+
 repetitions <- 10
 confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
   out = do(repetitions) * {
@@ -134,13 +136,15 @@ confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
       c(correct_negatives = confusion_matrix[1,1], correct_positives = confusion_matrix[2,2],
         wrong_negatives = confusion_matrix[2,1], wrong_positives = confusion_matrix[1,2])
     }
+    
+    rmse_grid <- c(rmse_grid, rmse(y_test, knn_model$pred))
   }
   colMeans(out)
 }
 rownames(confusion_matrix_values) <- paste("K", k_grid, sep = "")
 accuracy <- rowSums(confusion_matrix_values[,1:2]) / rowSums(confusion_matrix_values)
-best_k = k_grid[which.max(accuracy)]
-best_k
+best_acc_k = k_grid[which.max(accuracy)]
+best_acc_k
 
 plot(
   k_grid,
@@ -154,8 +158,28 @@ plot(
   main = "KNN Regression Accuracy"
 )
 
+```
+
+Below is a plot to find the optimal K based on minimizing the RMSE. From this, we find that the best K value is when K = 87.
+```{r echo = FALSE}
+best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
+best_k
+
+
+plot(
+  k_grid,
+  rmse_grid,
+  type = "b",
+  col = "dodgerblue",
+  cex = 1,
+  pch = 20,
+  xlab = "K",
+  ylab = "RMSE",
+  main = "KNN Regression RMSE"
+)
 
 ```
+
 
 
 ```{r echo = FALSE}
@@ -226,7 +250,7 @@ coef(lm_lame)
 ## debug
 # nonviral in real?
 ```
-# KNN Classification Approach
+## KNN Classification Approach
 
 Approaching the problem from where the dependent variable is a binary, or dummy, variable, rather than a numerical variable, yields different results. We defined a dummy variable "Viral" that equals 1 when the number of shares is greater than 1400. 
 
@@ -386,7 +410,7 @@ FN
 
 ```
 
-# Comparing Approach Performance
+## Comparing Approach Performance
 Averaged across ___ train-test splits, the KNN regression approach (regress first and threshold second) had an out-of-sample accuracy rate of around 0.552, whereas the KNN classification approach (threshold first and regress/classify second) had about 0.556 accuracy out-of-sample.
 
 The KNN regression method has a smaller optimal K value where the error is lowest (K = 4), as opposed to the KNN classification method which has an optimal K that is much higher.
