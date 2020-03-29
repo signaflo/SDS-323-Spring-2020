@@ -67,7 +67,7 @@ ggplot() +
 The 350 trim only has data on the years 1994, 1995, 2006, 2012, and 2013. Each year is concentrated in a particular section of the scatterplot, so it is likely that an observation's nearest neighbors would be close to it in time as well. Because of the huge gap in time between 1995 and 2006, there is a disjoint section for cars with mileage around 25,000.
 
 ```{r echo = FALSE}
-ggplot(data=sclass350, aes(x=price, y=mileage)) +
+ggplot(data=sclass350, aes(x=mileage, y=price)) +
   geom_point() +
   labs(title="Price vs Mileage for 350 Trim", x="Mileage", y="Price")+
   scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
@@ -80,7 +80,7 @@ Faceting by years for the 350 trim reveals that certain years have similar obser
 ```{r echo = FALSE}
 
 
-ggplot(data=sclass350, aes(x=price, y=mileage)) +
+ggplot(data=sclass350, aes(x=mileage, y=price)) +
   geom_point() +
   labs(title="Price vs Mileage for 350 Trim", x="Mileage", y="Price")+
   facet_wrap(~year) +
@@ -94,7 +94,7 @@ In contrast, the 65 AMG trim, with much fewer total observations, has a smooth g
 ```{r echo = FALSE}
 # use the below command to see years in sclass65 dataframe
 # sort((unique(sclass65$year)))
-ggplot(data=sclass65, aes(x=price, y=mileage)) +
+ggplot(data=sclass65, aes(x=mileage, y=price)) +
   geom_point() +
   labs(title="Price vs Mileage for 65 AMG Trim", x="Mileage", y="Price")+
   scale_x_continuous(name = "Mileage (thousands)", labels = scaleFUN)+
@@ -104,7 +104,7 @@ ggplot(data=sclass65, aes(x=price, y=mileage)) +
 Faceting by year for the 65 AMG trim also reveals clusters of observations for each year.
 
 ```{r echo = FALSE}
-ggplot(data=sclass65, aes(x=price, y=mileage)) +
+ggplot(data=sclass65, aes(x=mileage, y=price)) +
   geom_point() +
   labs(title="Price vs Mileage Across Years for 65 AMG Trim", x="Mileage", y="Price") +
   facet_wrap(~year)+
