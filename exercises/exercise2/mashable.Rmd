@@ -303,7 +303,7 @@ N_test2 = N - N_train2
 # k_to_try = k_grid
 k_to_try = list(3,4,7)
 reps = 2
-err_k = list()
+output2 = list()
 output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
   out2 = do(reps) * {
     train_ind2 = sample.int(N, N_train2, replace = FALSE)
@@ -345,14 +345,14 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
                test  = X_test_sc2,
                cl    = y_train2,
                k     = k)
-    knn_model_predictions_2 = knn_model_2$pred
+    # knn_model_predictions_2 = knn_model_2$pred
     
      # out of sample confusion matrix
-    viral_prediction_2 = ifelse(knn_model_predictions_2 > 1400, 1, 0)
-    actual_viral <- ifelse(y_test > 1400, 1, 0)
+    viral_prediction_2 = ifelse(knn_model_2 == 1, 1, 0)
+    actual_viral <- ifelse(y_test == 1, 1, 0)
     
     confusion_matrix2 = table(y = actual_viral, yhat = viral_prediction_2)
-    output2 <- c(output2, calc_class_err(y_test2, knn_model_predictions_2, n_test))
+    output2 <- c(output2, calc_class_err(y_test2, knn_model_2, n_test))
     # err_k <- c(err_k, calc_class_err(y_test2, knn_model_predictions_2, n_test))
     
     if (isTRUE(all.equal(dim(confusion_matrix2), c(2, 2)))) {
@@ -383,7 +383,7 @@ The following chart shows the relationship between the value of K and classifica
 ```{r  }
 plot(
   k_to_try,
-  err_k,
+  output2,
   type = "b",
   col = "dodgerblue",
   cex = 1,
