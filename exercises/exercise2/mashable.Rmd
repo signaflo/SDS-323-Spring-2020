@@ -29,7 +29,7 @@ library(mosaic)
 # library(doMC)
 
 set.seed(1001)
-articles = read.csv("data/online_news.csv")
+articles = read.csv("online_news.csv")
 articles <- articles %>% mutate(viral = ifelse(shares > 1400, 1, 0))
 ```
 # Problem 3
@@ -285,6 +285,12 @@ Approaching the problem considering the dependent variable as a binary variable,
 
 
 ```{r  }
+
+calc_class_err = function(actual, predicted) {
+  mean(actual != predicted)
+}
+
+k_to_try = k_grid
 reps = 2
 err_k = list()
 conf_matrix_values = foreach(k = k_to_try, .combine = rbind) %do% {
@@ -328,7 +334,7 @@ conf_matrix_values = foreach(k = k_to_try, .combine = rbind) %do% {
     pred = knn(train = scale(X_train2),
                test  = scale(X_test2),
                cl    = y_train2,
-               k     = k_to_try[i])
+               k     = k)
     err_k <- c(err_k, calc_class_err(y_test2, pred))
     # }
   }
