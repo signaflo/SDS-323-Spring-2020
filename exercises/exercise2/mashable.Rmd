@@ -73,7 +73,7 @@ Below are the different values of K tested to find the optimal K for the out-of-
 ```{r  }
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
-k_grid <- exp(seq(log(1), log(100), length=33)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(400), length=33)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid
 ```
@@ -105,7 +105,7 @@ confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
                              data_channel_is_world + self_reference_min_shares  +
                              avg_negative_polarity - 1,  data = D_train)
     
-    y_train = as.numeric(dplyr::select(D_train, shares)$shares)
+    y_train = as.numeric(select(D_train, shares)$shares)
     
     
     X_test = model.matrix(~ n_tokens_title +
@@ -115,7 +115,7 @@ confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
                              data_channel_is_world + self_reference_min_shares  +
                              avg_negative_polarity - 1, data = D_test)
     
-    y_test = as.numeric(dplyr::select(D_test, shares)$shares)
+    y_test = as.numeric(select(D_test, shares)$shares)
     
     # scale the training set features
     scale_factors = apply(X_train, 2, sd)
