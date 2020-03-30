@@ -29,7 +29,7 @@ library(mosaic)
 # library(doMC)
 
 set.seed(1001)
-articles = read.csv("online_news.csv")
+articles = read.csv("data/online_news.csv")
 articles <- articles %>% mutate(viral = ifelse(shares > 1400, 1, 0))
 ```
 # Problem 3
@@ -76,7 +76,7 @@ Below are the different values of K tested to find the optimal K for the out-of-
 ```{r  }
 
 # confusion matrix - make a table of KNN (regular, not classification) errors
-k_grid <- exp(seq(log(1), log(400), length=33)) %>% round %>% unique
+k_grid <- exp(seq(log(1), log(20), length=10)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid
 
@@ -100,8 +100,8 @@ rmse_grid= list()
 
 # create a confusion matrix for multiple K values
 # Make a train - test split 
-repetitions <- 1
-confusion_matrix_values = foreach(k = k_grid,  .combine='c') %do% {
+repetitions <- 2
+output_values = foreach(k = k_grid, .combine='rbind') %do% {
   out = do(repetitions)*{
     train_ind = sample.int(n, n_train)
     X_train = X[train_ind,]
@@ -121,27 +121,38 @@ confusion_matrix_values = foreach(k = k_grid,  .combine='c') %do% {
     
     # out of sample confusion matrix
     viral_prediction = ifelse(knn_model_predictions > 1400, 1, 0)
-    confusion_matrix = table(y = D_test$viral, yhat = viral_prediction)
-    if (isTRUE(all.equal(dim(confusion_matrix), c(2, 2)))) {
-      c(correct_negatives = confusion_matrix[1,1], correct_positives = confusion_matrix[2,2],
-        wrong_negatives = confusion_matrix[2,1], wrong_positives = confusion_matrix[1,2])
-    }
+    actual_viral <- ifelse(y_test > 1400, 1, 0)
     
+    confusion_matrix = table(y = actual_viral, yhat = viral_prediction)
     rmse_grid <- c(rmse_grid, rmse(y_test, knn_model$pred))
+    output <- c(rmse = rmse(y_test, knn_model$pred))
+    if (isTRUE(all.equal(dim(confusion_matrix), c(2, 2)))) {
+      output <- c(output, correct_negatives = confusion_matrix[1,1],
+                 correct_positives = confusion_matrix[2,2], 
+                 wrong_negatives = confusion_matrix[2,1], 
+                 wrong_positives = confusion_matrix[1,2])
+    }
+    output
   } 
   colMeans(out)
 }
-best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
-best_k
+rownames(output_values) <- paste("K", k_grid, sep = "")
+
+rmse_avg <- output_values[,"rmse"]
+confusion_matrix_values <- output_values[,2:5]
+best_rmse_k = k_grid[which.min(rmse_avg)]
+best_rmse_k
+
+rmse_best_k = min(rmse_avg)
+rmse_best_k
 # rmse_grid = data.frame(K = k_grid, RMSE = rmse_grid)
 # ind_best = which.min(rmse_grid$RMSE)
 # best_k = k_grid[ind_best]
 # best_k
 ```
-We find that the lowest RMSE is when K = `r best_k`. However, the K value with the highest out-of-sample accuracy has yet to be calculated.
+We find that the lowest RMSE is when K = `r best_rmse_k`. However, the K value with the highest out-of-sample accuracy has yet to be calculated.
 
 ```{r  }
-rownames(confusion_matrix_values) <- paste("K", k_grid, sep = "")
 accuracy <- rowSums(confusion_matrix_values[,1:2]) / rowSums(confusion_matrix_values)
 best_acc_k = k_grid[which.max(accuracy)]
 best_acc_k
@@ -150,9 +161,9 @@ rmse_most_accurate_k = rmse(y_test, best_acc_k)
 rmse_most_accurate_k
 
 ```
-Above is the best K value for out-of-sample accuracy. Although it seems like a low K value is not optimal for minimizing RMSE since it would lead to overfitting of the data, K = `r best_acc_k` has a RMSE of `r rmse_most_accurate_k`, as opposed to K = `r best_k` with a RMSE of `rmse best_k`.
+Above is the best K value for out-of-sample accuracy. Although it seems like a low K value is not optimal for minimizing RMSE since it would lead to overfitting of the data, K = `r best_acc_k` has a RMSE of `r rmse_most_accurate_k`, as opposed to K = `r best_rmse_k` with a RMSE of `r rmse_best_k`.
 
-Below is a plot of the K against the out-of-sample accuracy rate. While the RMSE is lower for K = `r best_k`, creating a model that is applicable to new data and accurate is also a high priority.
+Below is a plot of the K against the out-of-sample accuracy rate. While the RMSE is lower for K = `r best_rmse_k`, creating a model that is applicable to new data and accurate is also a high priority.
 ```{r  }
 plot(
   k_grid,
@@ -168,21 +179,14 @@ plot(
 
 
 ```
-```{r}
-# best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
-# best_k
-best_k
-rmse_best_k = rmse(y_test, best_k)
-rmse_best_k
-```
 
 It is best to have both a low RMSE and high accuracy rate. 
 
-K = `r best_k` has an accuracy rate of 0.4934416, error rate of 0.5065584, true positive rate of 0.9907716, and false positive rate of 0.9764151. 
+K = `r best_rmse_k` has an average accuracy rate of `r rmse_best_k`, error rate of 0.5065584, true positive rate of 0.9907716, and false positive rate of 0.9764151. 
 
 Meanwhile, K = `r best_acc_k` has accuracy rate of 0.5541682, error rate of 0.4458318, true positive rate of 0.7754422, and false positive rate of 0.6601291.
 
-Thus, K = 4 satisfies the criteria better than K = `r best_k`, so we find the optimal K based on a higher accuracy rate out-of-sample.
+Thus, K =  satisfies the criteria better than K = `r best_k`, so we find the optimal K based on a higher accuracy rate out-of-sample.
 ```{r  }
 
 
