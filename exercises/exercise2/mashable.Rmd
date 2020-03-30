@@ -303,12 +303,17 @@ N_test2 = N - N_train2
 # k_to_try = k_grid
 k_to_try = list(3,4,7)
 reps = 2
-output2 = list()
+
 output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
   out2 = do(reps) * {
     train_ind2 = sample.int(N, N_train2, replace = FALSE)
-    D_train2 = articles[train_ind2, ]
-    D_test2 = articles[-train_ind2, ]
+    # D_train2 = articles[train_ind2, ]
+    # D_test2 = articles[-train_ind2, ]
+    
+    X_train2 = X[train_ind2,]
+    X_test2 = X[-train_ind2,]
+    y_train2 = y[train_ind2]
+    y_test2 = y[-train_ind2]
     
     X_train2 = model.matrix(
       ~
@@ -319,9 +324,9 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
         data_channel_is_bus + data_channel_is_socmed +
         data_channel_is_tech + data_channel_is_world +
         self_reference_min_shares  + avg_negative_polarity - 1,
-      data = D_train2
+      data = X_train2
     )
-    y_train2 = y[train_ind2,]
+    
     X_test2 = model.matrix(
       ~
         n_tokens_title +
@@ -330,9 +335,9 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
         data_channel_is_bus + data_channel_is_socmed +
         data_channel_is_tech + data_channel_is_world +
         self_reference_min_shares  + avg_negative_polarity - 1,
-      data = D_test2
+      data = X_test2
     )
-    y_test2 = y[-train_ind2,]
+    
     
     # scale the training set features
     scale_factors = apply(X_train2, 2, sd)
@@ -352,7 +357,7 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
     actual_viral <- ifelse(y_test2 == 1, 1, 0)
     
     confusion_matrix2 = table(y = actual_viral, yhat = viral_prediction_2)
-    output2 <- c(output2, calc_class_err(y_test2, knn_model_2, N_test2))
+    output2 <- c(error= calc_class_err(y_test2, knn_model_2, N_test2))
     # err_k <- c(err_k, calc_class_err(y_test2, knn_model_predictions_2, n_test))
     
     if (isTRUE(all.equal(dim(confusion_matrix2), c(2, 2)))) {
@@ -367,12 +372,12 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
 }
 rownames(output_values_2) <- paste("K", k_to_try, sep = "")
 
-rmse_avg2 <- output_values_2[,"rmse"]
-output_values_2 <- output_values_2[,2:5]
-best_rmse_k2 = k_to_try[which.min(rmse_avg2)]
+error2 <- output_values_2[ ,"error"]
+confusion_out_2 <- output_values_2[,2:5]
+best_rmse_k2 = k_to_try[which.min(error2)]
 best_rmse_k2
 
-rmse_best_k2 = min(rmse_avg2)
+rmse_best_k2 = min(error2)
 rmse_best_k2
 
 ```
@@ -409,7 +414,7 @@ mean(y_test2 == "0")
 
 Below, the confusion matrix for the KNN classification method is displayed.
 ```{r  }
-confusion_out_2 = table(knn.pred = knn_model_2, Actual = D_test2$viral) 
+confusion_out_2 = table(knn.pred = knn_model_2, Actual = X_test2$viral) 
 
 # 2067 number of Viral in real which is Viral in predicted. 
 # 2336 number of Nonviral in real which is Nonviral in predicted. 
