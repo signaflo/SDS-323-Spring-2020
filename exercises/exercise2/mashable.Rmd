@@ -24,10 +24,13 @@ library(kableExtra)
 library(knitr)
 library(ggthemes)
 
+
+library(mosaic)
+# library(doMC)
+
 set.seed(1001)
 articles = read.csv("online_news.csv")
 articles <- articles %>% mutate(viral = ifelse(shares > 1400, 1, 0))
-
 ```
 # Problem 3
 ## Becoming "Viral"
@@ -76,58 +79,42 @@ Below are the different values of K tested to find the optimal K for the out-of-
 k_grid <- exp(seq(log(1), log(400), length=33)) %>% round %>% unique
 k_grid <- k_grid[k_grid != 2]
 k_grid
+
 ```
 
-Iterating across the above range of K to find the lowest RMSE (Root Mean Square Error), we find that the best K value is when K = 87. However, the K value with the highest out-of-sample accuracy is K = 4.
+Iterating across the above range of K to find the lowest RMSE (Root Mean Square Error), we try to find the best K.
 ```{r  }
+
+X = select(articles, n_tokens_title, 
+               num_hrefs, num_self_hrefs, num_imgs, average_token_length,
+               num_keywords, data_channel_is_lifestyle, data_channel_is_entertainment,
+               data_channel_is_bus, data_channel_is_socmed,
+               data_channel_is_tech, data_channel_is_world,
+               self_reference_min_shares , avg_negative_polarity)
+y = articles$shares
+n = length(y)
+n_train = round(0.8*n)
+n_test = n - n_train
+
 # create a confusion matrix for multiple K values
 # Make a train - test split 
-N = nrow(articles)
-N_train = floor(0.8 * N)
-N_test = N - N_train
-
-rmse_grid = list()
-
 repetitions <- 5
-confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
-  out = do(repetitions) * {
-  
-    train_ind = sample.int(N, N_train, replace=FALSE)
-    
-    D_train = arti[train_ind,]
-    D_test = arti[-train_ind,]
-    
-    D_test = arrange(D_test, n_tokens_content)
-    
-    X_train = model.matrix(shares ~ 
-                             n_tokens_title + 
-                             num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-                             num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-                             data_channel_is_bus + data_channel_is_socmed +
-                             data_channel_is_tech + data_channel_is_world +
-                             self_reference_min_shares  + avg_negative_polarity - 1, data=D_train)
-    
-    y_train = select(D_train, shares)
-    
-    X_test = model.matrix(shares ~  n_tokens_title + 
-                            num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-                            num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-                            data_channel_is_bus + data_channel_is_socmed +
-                            data_channel_is_tech + data_channel_is_world +
-                            self_reference_min_shares  + avg_negative_polarity - 1, data=D_test)
-    
-    y_test = select(D_test, shares)
+confusion_matrix_values = foreach(k = k_grid,  .combine='c') %do% {
+  out = do(repetitions)*{
+    train_ind = sample.int(n, n_train)
+    X_train = X[train_ind,]
+    X_test = X[-train_ind,]
+    y_train = y[train_ind]
+    y_test = y[-train_ind]
     
     # scale the training set features
     scale_factors = apply(X_train, 2, sd)
-    X_train = scale(X_train, scale=scale_factors)
-    # scale the test set features using the same scale factors
-    X_test = scale(X_test, scale=scale_factors)
-   
-    # KNN 
-    knn_model = knn.reg(train = X_train, 
-                   test = X_test, y = y_train, k=k)
+    X_train_sc = scale(X_train, scale=scale_factors)
     
+    # scale the test set features using the same scale factors
+    X_test_sc = scale(X_test, scale=scale_factors)
+    
+    knn_model = FNN::knn.reg(as.data.frame(X_train_sc), as.data.frame(X_test_sc), y_train, k=k)
     knn_model_predictions = knn_model$pred
     
     # out of sample confusion matrix
@@ -139,12 +126,17 @@ confusion_matrix_values = foreach(k = k_grid, .combine = rbind) %do% {
     }
     
     rmse_grid <- c(rmse_grid, rmse(y_test, knn_model$pred))
-  }
+  } 
   colMeans(out)
 }
-```
 
-Below is the best K value for out-of-sample accuracy. Although it seems like a low K value is not optimal for minimizing RMSE since it would lead to overfitting of the data, K = 4 has a RMSE of 11274.52, as opposed to K = 87 with a RMSE of 11250.48.
+rmse_grid = data.frame(K = k_grid, RMSE = rmse_grid)
+ind_best = which.min(rmse_grid$RMSE)
+best_k = k_grid[ind_best]
+best_k
+```
+We find that the lowest RMSE is when K = `r best_k`. However, the K value with the highest out-of-sample accuracy has yet to be calculated.
+
 ```{r  }
 rownames(confusion_matrix_values) <- paste("K", k_grid, sep = "")
 accuracy <- rowSums(confusion_matrix_values[,1:2]) / rowSums(confusion_matrix_values)
@@ -153,9 +145,11 @@ best_acc_k
 
 rmse_most_accurate_k = rmse(y_test, best_acc_k)
 rmse_most_accurate_k
-```
 
-Below is a plot of the K against the out-of-sample accuracy rate. While the RMSE is lower for K = 87, creating a model that is applicable to new data and accurate is also a high priority.
+```
+Above is the best K value for out-of-sample accuracy. Although it seems like a low K value is not optimal for minimizing RMSE since it would lead to overfitting of the data, K = `r best_acc_k` has a RMSE of `r rmse_most_accurate_k`, as opposed to K = `r best_k` with a RMSE of `rmse best_k`.
+
+Below is a plot of the K against the out-of-sample accuracy rate. While the RMSE is lower for K = `r best_k`, creating a model that is applicable to new data and accurate is also a high priority.
 ```{r  }
 plot(
   k_grid,
@@ -171,20 +165,23 @@ plot(
 
 
 ```
+```{r}
+# best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
+# best_k
+best_k
+rmse_best_k = rmse(y_test, best_k)
+rmse_best_k
+```
 
 It is best to have both a low RMSE and high accuracy rate. 
 
-K = 87 has an accuracy rate of 0.4934416, error rate of 0.5065584, true positive rate of 0.9907716, and false positive rate of 0.9764151. 
+K = `r best_k` has an accuracy rate of 0.4934416, error rate of 0.5065584, true positive rate of 0.9907716, and false positive rate of 0.9764151. 
 
-Meanwhile, K = 4 has accuracy rate of 0.5541682, error rate of 0.4458318, true positive rate of 0.7754422, and false positive rate of 0.6601291.
+Meanwhile, K = `r best_acc_k` has accuracy rate of 0.5541682, error rate of 0.4458318, true positive rate of 0.7754422, and false positive rate of 0.6601291.
 
-Thus, K = 4 satisfies the criteria better than K = 87, so we find the optimal K based on a higher accuracy rate out-of-sample.
+Thus, K = 4 satisfies the criteria better than K = `r best_k`, so we find the optimal K based on a higher accuracy rate out-of-sample.
 ```{r  }
-best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
-best_k
 
-rmse_best_k = rmse(y_test, best_k)
-rmse_best_k
 
 plot(
   k_grid,
@@ -210,7 +207,7 @@ knn_model_predictions <- knn_model$pred
 yhat_test_viral1 = ifelse(knn_model_predictions > 1400,1, 0)
 ```
 
-The confusion matrix for K = 4 is shown below.
+The confusion matrix for K = `r best_acc_k` is shown below.
 ```{r  }
 confusion_out = table(knn.pred = yhat_test_viral1, Actual = D_test$viral) 
 
@@ -271,55 +268,6 @@ lm_lame = lm(!viral ~ 1, data = articles)
 
 Approaching the problem from where the dependent variable is a binary, or dummy, variable, rather than a numerical variable, yields different results. We defined a dummy variable "Viral" that equals 1 when the number of shares is greater than 1400. 
 
-```{r  }
-############################ 
-# set.seed(1)
-# standardized.X = scale(articles[, -1])
-# y = articles$viral
-# 
-# N = nrow(articles)
-# N_train2 = floor(0.8 * N)
-# N_test2 = N - N_train2
-# train_ind2 = sample.int(N, N_train2, replace=FALSE)
-# D_train2 = articles[train_ind2,]
-# D_test2 = articles[-train_ind2,]
-# X_train2 = model.matrix(~ 
-#                           n_tokens_title + 
-#                           num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-#                           num_keywords + data_channel_is_lifestyle +
-#                           data_channel_is_entertainment +
-#                           data_channel_is_bus + data_channel_is_socmed +
-#                           data_channel_is_tech + data_channel_is_world +
-#                           self_reference_min_shares  + avg_negative_polarity - 1, 
-#                         data=D_train2)
-# y_train2 = y[train_ind2]
-# X_test2 = model.matrix(~
-#                          n_tokens_title +
-#                          num_hrefs + num_self_hrefs + num_imgs + average_token_length +
-#                          num_keywords + data_channel_is_lifestyle + data_channel_is_entertainment +
-#                          data_channel_is_bus + data_channel_is_socmed +
-#                          data_channel_is_tech + data_channel_is_world +
-#                          self_reference_min_shares  + avg_negative_polarity - 1,
-#                        data = D_test2
-# )
-# y_test2 = y[-train_ind2]
-# 
-# 
-# calc_class_err = function(actual, predicted) {
-#   mean(actual != predicted)
-# }
-# 
-# k_to_try = k_grid
-# # err_k = rep(x = 0, times = length(k_to_try))
-# for (i in seq_along(k_to_try)) {
-#   pred = knn(train = scale(X_train2),
-#              test  = scale(X_test2),
-#              cl    = y_train2,
-#              k     = k_to_try[i])
-#   err_k[i] = calc_class_err(y_test2, pred)
-# }
-
-```
 
 ```{r  }
 reps = 2
@@ -460,4 +408,3 @@ FN
 Averaged across 50 train-test splits, the KNN regression approach (regress first and threshold second) had an out-of-sample accuracy rate of around 0.552, whereas the KNN classification approach (threshold first and regress/classify second) had about 0.556 accuracy out-of-sample.
 
 The KNN regression method has a smaller optimal K value where the error is lowest (K = 4), as opposed to the KNN classification method which has an optimal K that is much higher.
-
