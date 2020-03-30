@@ -215,7 +215,7 @@ Meanwhile, K = 4 has accuracy rate of 0.5566906, error rate of
 0.4433094, true positive rate of 0.7824887, and false positive rate of
 0.6715699.
 
-Thus, K = satisfies the criteria better than K = 33, so we find the
+Thus, K = 4 satisfies the criteria better than K = 33, so we find the
 optimal K based on a higher accuracy rate out-of-sample.
 
 In contrast, the null model, which always predicts that an article will
@@ -235,9 +235,9 @@ variable, rather than a numerical variable, yields different results. We
 defined a dummy variable “Viral” that equals 1 when the number of shares
 is greater than 1400.
 
-    ## [1] 53
+    ## [1] 62
 
-    ## [1] 0.3801236
+    ## [1] 0.378875
 
 The following chart shows the relationship between the value of K and
 classification error. This chart helps us to find the optimal K with the
@@ -245,52 +245,85 @@ lowest classification error.
 
 ![](mashable_files/figure-markdown_strict/unnamed-chunk-18-1.png)
 
-    ## [1] 0.3807542
+    ## [1] 0.3810064
 
     ## error 
     ##     1
 
 There is an average of 49% of Viral and 51% Nonviral in the test set.
 
-    ## [1] 0.4933787
+    ## [1] 0.4994325
 
-    ## [1] 0.5066213
+    ## [1] 0.5005675
 
 Below, the confusion matrix for the KNN classification method is
 displayed.
-
-    ##            Actual
-    ## knn.pred    Not Viral Viral
-    ##   Not Viral      2546  1548
-    ##   Viral          1471  2364
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+Not Viral
+</th>
+<th style="text-align:right;">
+Viral
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Not Viral
+</td>
+<td style="text-align:right;">
+2558
+</td>
+<td style="text-align:right;">
+1610
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Viral
+</td>
+<td style="text-align:right;">
+1411
+</td>
+<td style="text-align:right;">
+2350
+</td>
+</tr>
+</tbody>
+</table>
 
 The out-of-sample accuracy is shown below.
 
-    ## [1] 0.6192458
+    ## [1] 0.6189936
 
 The overall error rate is shown below.
 
-    ## [1] 0.3807542
+    ## [1] 0.3810064
 
 The true positive rate (percentage of Viral that are correctly
 identified) is shown below.
 
-    ## [1] 0.6042945
+    ## [1] 0.5934343
 
 The true negative rate (percentage of Nonviral that are correctly
 identified) is shown below.
 
-    ## [1] 0.6338063
+    ## [1] 0.6444948
 
 The false positive rate (percentage of Viral incorrectly identified as
 Nonviral) is shown below.
 
-    ## [1] 0.3661937
+    ## [1] 0.3555052
 
 The false negative rate (percentage of NonViral incorrectly identified
 as Viral) is shown below.
 
-    ## [1] 0.3957055
+    ## [1] 0.4065657
 
 Comparing Approach Performance
 ------------------------------
