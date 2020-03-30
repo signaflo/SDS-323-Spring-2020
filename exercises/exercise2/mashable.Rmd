@@ -349,10 +349,10 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
     
      # out of sample confusion matrix
     viral_prediction_2 = ifelse(knn_model_2 == 1, 1, 0)
-    actual_viral <- ifelse(y_test == 1, 1, 0)
+    actual_viral <- ifelse(y_test2 == 1, 1, 0)
     
     confusion_matrix2 = table(y = actual_viral, yhat = viral_prediction_2)
-    output2 <- c(output2, calc_class_err(y_test2, knn_model_2, n_test))
+    output2 <- c(output2, calc_class_err(y_test2, knn_model_2, N_test2))
     # err_k <- c(err_k, calc_class_err(y_test2, knn_model_predictions_2, n_test))
     
     if (isTRUE(all.equal(dim(confusion_matrix2), c(2, 2)))) {
@@ -409,7 +409,7 @@ mean(y_test2 == "0")
 
 Below, the confusion matrix for the KNN classification method is displayed.
 ```{r  }
-confusion_out_2 = table(knn.pred = knn_model_predictions_2, Actual = D_test2$viral) 
+confusion_out_2 = table(knn.pred = knn_model_2, Actual = D_test2$viral) 
 
 # 2067 number of Viral in real which is Viral in predicted. 
 # 2336 number of Nonviral in real which is Nonviral in predicted. 
