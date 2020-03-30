@@ -193,7 +193,7 @@ K = `r best_rmse_k` has an average accuracy rate of `r rmse_best_k`, error rate 
 
 Meanwhile, K = `r best_acc_k` has accuracy rate of 0.5541682, error rate of 0.4458318, true positive rate of 0.7754422, and false positive rate of 0.6601291.
 
-Thus, K =  satisfies the criteria better than K = `r best_rmse_k`, so we find the optimal K based on a higher accuracy rate out-of-sample.
+Thus, K = `r best_acc_k` satisfies the criteria better than K = `r best_rmse_k`, so we find the optimal K based on a higher accuracy rate out-of-sample.
 ```{r  }
 
 
@@ -469,6 +469,6 @@ FN
 ## Comparing Approach Performance
 Averaged across 50 train-test splits, the KNN regression approach (regress first and threshold second) had an out-of-sample accuracy rate of around 0.552, whereas the KNN classification approach (threshold first and regress/classify second) had about 0.556 accuracy out-of-sample.
 
-The KNN regression method has a smaller optimal K value where the error is lowest (K = 4), as opposed to the KNN classification method which has an optimal K that is much higher.
+The KNN regression method has a smaller optimal K value where the error is lowest (K = `r best_acc_k`), as opposed to the KNN classification method which has an optimal K that is much higher.
 
 As for why the classification technique outperforms the model where we regress then threshold, we must look at the difference between regression and classification. The regression model predicts a numerical value, shares, based on several predictors. This predicted value can be greater than the bounds of probability between 0 and 1. In the case where the threshold clearly delineates between viral and not viral, then the regress first, threshold second method would be fine. However, when there are outliers, such as a few articles that get several hundred thousand shares as in this dataset, then the regression model's predictions would be affected. The linear regression slope itself would lean towards the outliers, while the threshold stays at 1,400 shares. As a result, articles that were previously classified as viral are now predicted to not be viral. The classification method has higher accuracy because the nearest neighbors are either 1 or 0. The difference in magnitude is not accounted for, so any articles with many shares do not affect the estimate of viral or not viral.
