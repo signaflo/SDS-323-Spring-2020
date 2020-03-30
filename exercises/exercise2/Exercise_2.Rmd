@@ -938,7 +938,7 @@ N_test2 = N - N_train2
     
 k_to_try = k_grid
 # k_to_try = list(3,4,7)
-reps = 5
+reps = 30
 
 output_values_2 = foreach(k = k_to_try, .combine = 'rbind') %do% {
   out2 = do(reps) * {
