@@ -85,7 +85,7 @@ trim has a much wider range, so the best KNN model generalizes over that
 variation. In contrast, the 350 trim, although its mean is being pulled
 downwards from low values, is more normally distributed and has a
 tighter distribution. Also, there are fewer observations for the 65 AMG
-trim, so it is more prone to outliers. Thus, due to the noise and few
+trim, so it is more prone to outliers. Thus, due to the noise and fewer overall
 points to average over, the model must be more flexible.
 
 Visually, if we compare the price of each trim to mileage in the initial
@@ -95,19 +95,19 @@ prices that could skew the results. Since the trend here is much less
 obvious, the model benefits from a higher K; more points are being
 averaged over and it results in a more “smoothed out” model. Conversely,
 the 350 trim (although it appears to have 2 or 3 separate sub-groupings
-with different slopes) has a more linear trend, so the K performs better
-when it is smaller and more granular.
+with different slopes) has a more linear trend, so the model performs better
+when K is smaller and the model is more granular.
 
 If we compare the RMSEs for both, the out-of-sample RMSE for the 65 trim
 model is almost twice that of the 350 model, so the model is worse for
 the 65 AMG trim, likely due to the variation as described above. The
 relatively higher K and RMSE values for the 65 AMG trim could suggest
 high bias; the model is oversimplifying and struggling to make a
-prediction. Another indication of this is that the regression models
+prediction. Another indication of this is that the liinear regression models
 perform better for the 350 trim than for the 65 AMG trim; a
-second-degree polynomial does not perform much better than a linear line
+second-degree polynomial does not perform much better than a linear model
 for the 350 trim, whereas the linear model has an extremely high error
-rate compared to the polynomial and the KNN model.
+rate compared to the polynomial and the KNN model for the 65 AMG.
 
 In short, the 65 AMG trim is more difficult to predict than the 350 trim
 due to less data being available, the more nonlinear pattern of price to
