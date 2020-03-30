@@ -96,7 +96,7 @@ n_test = n - n_train
 
 # create a confusion matrix for multiple K values
 # Make a train - test split 
-repetitions <- 10
+repetitions <- 30
 output_values = foreach(k = k_grid, .combine='rbind') %do% {
   out = do(repetitions)*{
     train_ind = sample.int(n, n_train)
@@ -286,25 +286,30 @@ Approaching the problem considering the dependent variable as a binary variable,
 
 ```{r  }
 
-calc_class_err = function(actual, predicted) {
-  mean(actual != predicted)
+# calc_class_err = function(actual, predicted) {
+#   mean(actual != predicted)
+# }
+
+calc_class_err = function(actual, predicted, n_testing) {
+  mean((sum(actual != predicted))/n_testing)
 }
 
-k_to_try = k_grid
+y = articles$viral
+N = nrow(articles)
+N_train2 = floor(0.8 * N)
+N_test2 = N - N_train2
+    
+    
+# k_to_try = k_grid
+k_to_try = list(3,4,7)
 reps = 2
 err_k = list()
-conf_matrix_values = foreach(k = k_to_try, .combine = rbind) %do% {
-  out = do(repetitions) * {
-    
-    standardized.X = scale(articles[,-1])
-    y = articles$viral
-    
-    N = nrow(articles)
-    N_train2 = floor(0.8 * N)
-    N_test2 = N - N_train2
+output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
+  out2 = do(reps) * {
     train_ind2 = sample.int(N, N_train2, replace = FALSE)
     D_train2 = articles[train_ind2, ]
     D_test2 = articles[-train_ind2, ]
+    
     X_train2 = model.matrix(
       ~
         n_tokens_title +
@@ -328,25 +333,56 @@ conf_matrix_values = foreach(k = k_to_try, .combine = rbind) %do% {
       data = D_test2
     )
     y_test2 = y[-train_ind2]
-    # 
-    # err_k = rep(x = 0, times = length(k_to_try))
-    # for (i in seq_along(k_to_try)) {
-    pred = knn(train = scale(X_train2),
-               test  = scale(X_test2),
+    
+    # scale the training set features
+    scale_factors = apply(X_train2, 2, sd)
+    X_train_sc2 = scale(X_train2, scale=scale_factors)
+    
+    # scale the test set features using the same scale factors
+    X_test_sc2 = scale(X_test2, scale=scale_factors)
+   
+    knn_model_2 = class::knn(train = X_train_sc2,
+               test  = X_test_sc2,
                cl    = y_train2,
                k     = k)
-    err_k <- c(err_k, calc_class_err(y_test2, pred))
-    # }
-  }
+    knn_model_predictions_2 = knn_model_2$pred
+    
+     # out of sample confusion matrix
+    viral_prediction_2 = ifelse(knn_model_predictions_2 > 1400, 1, 0)
+    actual_viral <- ifelse(y_test > 1400, 1, 0)
+    
+    confusion_matrix2 = table(y = actual_viral, yhat = viral_prediction_2)
+    output2 <- c(output2, calc_class_err(y_test2, knn_model_predictions_2, n_test))
+    # err_k <- c(err_k, calc_class_err(y_test2, knn_model_predictions_2, n_test))
+    
+    if (isTRUE(all.equal(dim(confusion_matrix2), c(2, 2)))) {
+      output2 <- c(output2, correct_negatives = confusion_matrix2[1,1],
+                 correct_positives = confusion_matrix2[2,2], 
+                 wrong_negatives = confusion_matrix2[2,1], 
+                 wrong_positives = confusion_matrix2[1,2])
+    }
+    output2
+  } 
+  colMeans(out2)
 }
+rownames(output_values_2) <- paste("K", k_to_try, sep = "")
+
+rmse_avg2 <- output_values_2[,"rmse"]
+output_values_2 <- output_values_2[,2:5]
+best_rmse_k2 = k_to_try[which.min(rmse_avg2)]
+best_rmse_k2
+
+rmse_best_k2 = min(rmse_avg2)
+rmse_best_k2
+
 ```
 
 
-The following chart shows the relationship between the value of K and classification error. This chart helps us to find the optimal k = 28 has the smallest classification error of 38%.
+The following chart shows the relationship between the value of K and classification error. This chart helps us to find the optimal K with the lowest classification error.
 
 ```{r  }
 plot(
-  k_grid,
+  k_to_try,
   err_k,
   type = "b",
   col = "dodgerblue",
@@ -359,8 +395,8 @@ plot(
 ```
 
 ```{r  }
-min(err_k)
-which(err_k == min(err_k))
+min(unlist(output2))
+which(output2 == min(unlist(output2)))
 
 # table(y_test2) %>% kable() %>% kable_styling()
 ```
@@ -373,7 +409,7 @@ mean(y_test2 == "0")
 
 Below, the confusion matrix for the KNN classification method is displayed.
 ```{r  }
-confusion_out_2 = table(knn.pred = knn3_2, Actual = D_test2$viral) 
+confusion_out_2 = table(knn.pred = knn_model_predictions_2, Actual = D_test2$viral) 
 
 # 2067 number of Viral in real which is Viral in predicted. 
 # 2336 number of Nonviral in real which is Nonviral in predicted. 
