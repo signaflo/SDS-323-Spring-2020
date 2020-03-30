@@ -224,7 +224,7 @@ yhat_test_viral1 = ifelse(knn_model_predictions > 1400,1, 0)
 
 The confusion matrix for K = `r best_acc_k` is shown below.
 ```{r  }
-confusion_out = table(knn.pred = yhat_test_viral1, Actual = D_test$viral) 
+confusion_out = table(knn.pred = yhat_test_viral1, Actual = articles[-train_ind, ]$viral) 
 
 # Matrix
 colnames(confusion_out) <- c("Not Viral","Viral")
@@ -321,7 +321,7 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
         self_reference_min_shares  + avg_negative_polarity - 1,
       data = D_train2
     )
-    y_train2 = y[train_ind2]
+    y_train2 = y[train_ind2,]
     X_test2 = model.matrix(
       ~
         n_tokens_title +
@@ -332,7 +332,7 @@ output_values_2 = foreach(k = k_to_try, .combine = rbind) %do% {
         self_reference_min_shares  + avg_negative_polarity - 1,
       data = D_test2
     )
-    y_test2 = y[-train_ind2]
+    y_test2 = y[-train_ind2,]
     
     # scale the training set features
     scale_factors = apply(X_train2, 2, sd)
