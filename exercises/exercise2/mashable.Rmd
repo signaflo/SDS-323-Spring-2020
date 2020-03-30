@@ -96,9 +96,11 @@ n = length(y)
 n_train = round(0.8*n)
 n_test = n - n_train
 
+rmse_grid= list()
+
 # create a confusion matrix for multiple K values
 # Make a train - test split 
-repetitions <- 5
+repetitions <- 1
 confusion_matrix_values = foreach(k = k_grid,  .combine='c') %do% {
   out = do(repetitions)*{
     train_ind = sample.int(n, n_train)
@@ -129,11 +131,12 @@ confusion_matrix_values = foreach(k = k_grid,  .combine='c') %do% {
   } 
   colMeans(out)
 }
-
-rmse_grid = data.frame(K = k_grid, RMSE = rmse_grid)
-ind_best = which.min(rmse_grid$RMSE)
-best_k = k_grid[ind_best]
+best_k = k_grid[which(rmse_grid == min(unlist(list(rmse_grid))))]
 best_k
+# rmse_grid = data.frame(K = k_grid, RMSE = rmse_grid)
+# ind_best = which.min(rmse_grid$RMSE)
+# best_k = k_grid[ind_best]
+# best_k
 ```
 We find that the lowest RMSE is when K = `r best_k`. However, the K value with the highest out-of-sample accuracy has yet to be calculated.
 
